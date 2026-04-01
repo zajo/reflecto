@@ -1,0 +1,24 @@
+# Copyright 2026 Emil Dotchevski
+
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+import testing ;
+
+variant reflecto_debug_single_header : debug : <define>BOOST_REFLECTO_TEST_SINGLE_HEADER ;
+variant reflecto_release_single_header : release : <define>BOOST_REFLECTO_TEST_SINGLE_HEADER ;
+
+project
+    : default-build
+        <cxxstd>17
+    : requirements
+        <include>../include
+    ;
+
+compile type_name_test.cpp ;
+compile enum_value_name_test.cpp ;
+compile name_test.cpp ;
+
+run type_name_test.cpp : : : <define>RUNTIME_TEST : rt_type_name_test ;
+run enum_value_name_test.cpp : : : <define>RUNTIME_TEST : rt_enum_value_name_test ;
+run name_test.cpp : : : <define>RUNTIME_TEST : rt_name_test ;

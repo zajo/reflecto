@@ -1,0 +1,145 @@
+// Copyright 2026 Emil Dotchevski
+
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#ifdef BOOST_REFLECTO_TEST_SINGLE_HEADER
+#   include "reflecto.hpp"
+#else
+#   include <boost/reflecto/enum_value_name.hpp>
+#endif
+
+#include "test_helpers.hpp"
+
+namespace test_ns
+{
+    enum class enum1 { value0, value1, value2 };
+    enum class enum2 { x = 10, y = 20 };
+    enum enum3 { enum3_value0, enum3_value1, enum3_value2 };
+    enum enum4 { enum4_x = 10, enum4_y = 20 };
+}
+
+enum class global_enum1 { a, b, c };
+enum global_enum2 { global_enum2_a, global_enum2_b, global_enum2_c };
+
+enum class partial_enum { a, b, c };
+
+template <>
+struct boost::reflecto::enum_lookup_range<partial_enum>
+{
+    static constexpr int min_value = 0;
+    static constexpr int max_value = 1;
+};
+
+using boost::reflecto::enum_value_name;
+using boost::reflecto::unqualified_enum_value_name;
+
+////////////////////////////////////////
+
+int main()
+{
+    CHECK_ENUM_VALUE_NAME(test_ns::enum1::value0, "test_ns::enum1::value0");
+    CHECK_ENUM_VALUE_NAME(test_ns::enum1::value1, "test_ns::enum1::value1");
+    CHECK_ENUM_VALUE_NAME(test_ns::enum1::value2, "test_ns::enum1::value2");
+
+    CHECK_ENUM_VALUE_NAME(test_ns::enum2::x, "test_ns::enum2::x");
+    CHECK_ENUM_VALUE_NAME(test_ns::enum2::y, "test_ns::enum2::y");
+
+    CHECK_ENUM_VALUE_NAME(test_ns::enum3_value0, "test_ns::enum3_value0");
+    CHECK_ENUM_VALUE_NAME(test_ns::enum3_value1, "test_ns::enum3_value1");
+    CHECK_ENUM_VALUE_NAME(test_ns::enum3_value2, "test_ns::enum3_value2");
+
+    CHECK_ENUM_VALUE_NAME(test_ns::enum4_x, "test_ns::enum4_x");
+    CHECK_ENUM_VALUE_NAME(test_ns::enum4_y, "test_ns::enum4_y");
+
+    CHECK_ENUM_VALUE_NAME(global_enum1::a, "global_enum1::a");
+    CHECK_ENUM_VALUE_NAME(global_enum1::b, "global_enum1::b");
+    CHECK_ENUM_VALUE_NAME(global_enum1::c, "global_enum1::c");
+
+    CHECK_ENUM_VALUE_NAME(global_enum2_a, "global_enum2_a");
+    CHECK_ENUM_VALUE_NAME(global_enum2_b, "global_enum2_b");
+    CHECK_ENUM_VALUE_NAME(global_enum2_c, "global_enum2_c");
+
+    ////////////////////////////////////////
+
+    CHECK_NAME(enum_value_name(test_ns::enum1::value0), "test_ns::enum1::value0");
+    CHECK_NAME(enum_value_name(test_ns::enum1::value1), "test_ns::enum1::value1");
+    CHECK_NAME(enum_value_name(test_ns::enum1::value2), "test_ns::enum1::value2");
+
+    CHECK_NAME(enum_value_name(test_ns::enum2::x), "test_ns::enum2::x");
+    CHECK_NAME(enum_value_name(test_ns::enum2::y), "test_ns::enum2::y");
+
+    CHECK_NAME(enum_value_name(test_ns::enum3_value0), "test_ns::enum3_value0");
+    CHECK_NAME(enum_value_name(test_ns::enum3_value1), "test_ns::enum3_value1");
+    CHECK_NAME(enum_value_name(test_ns::enum3_value2), "test_ns::enum3_value2");
+
+    CHECK_NAME(enum_value_name(test_ns::enum4_x), "test_ns::enum4_x");
+    CHECK_NAME(enum_value_name(test_ns::enum4_y), "test_ns::enum4_y");
+
+    CHECK_NAME(enum_value_name(global_enum1::a), "global_enum1::a");
+    CHECK_NAME(enum_value_name(global_enum1::b), "global_enum1::b");
+    CHECK_NAME(enum_value_name(global_enum1::c), "global_enum1::c");
+
+    CHECK_NAME(enum_value_name(global_enum2_a), "global_enum2_a");
+    CHECK_NAME(enum_value_name(global_enum2_b), "global_enum2_b");
+    CHECK_NAME(enum_value_name(global_enum2_c), "global_enum2_c");
+
+    ////////////////////////////////////////
+
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(test_ns::enum1::value0, "value0");
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(test_ns::enum1::value1, "value1");
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(test_ns::enum1::value2, "value2");
+
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(test_ns::enum2::x, "x");
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(test_ns::enum2::y, "y");
+
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(test_ns::enum3_value0, "enum3_value0");
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(test_ns::enum3_value1, "enum3_value1");
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(test_ns::enum3_value2, "enum3_value2");
+
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(test_ns::enum4_x, "enum4_x");
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(test_ns::enum4_y, "enum4_y");
+
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(global_enum1::a, "a");
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(global_enum1::b, "b");
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(global_enum1::c, "c");
+
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(global_enum2_a, "global_enum2_a");
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(global_enum2_b, "global_enum2_b");
+    CHECK_UNQUALIFIED_ENUM_VALUE_NAME(global_enum2_c, "global_enum2_c");
+
+    ////////////////////////////////////////
+
+    CHECK_NAME(unqualified_enum_value_name(test_ns::enum1::value0), "value0");
+    CHECK_NAME(unqualified_enum_value_name(test_ns::enum1::value1), "value1");
+    CHECK_NAME(unqualified_enum_value_name(test_ns::enum1::value2), "value2");
+
+    CHECK_NAME(unqualified_enum_value_name(test_ns::enum2::x), "x");
+    CHECK_NAME(unqualified_enum_value_name(test_ns::enum2::y), "y");
+
+    CHECK_NAME(unqualified_enum_value_name(test_ns::enum3_value0), "enum3_value0");
+    CHECK_NAME(unqualified_enum_value_name(test_ns::enum3_value1), "enum3_value1");
+    CHECK_NAME(unqualified_enum_value_name(test_ns::enum3_value2), "enum3_value2");
+
+    CHECK_NAME(unqualified_enum_value_name(test_ns::enum4_x), "enum4_x");
+    CHECK_NAME(unqualified_enum_value_name(test_ns::enum4_y), "enum4_y");
+
+    CHECK_NAME(unqualified_enum_value_name(global_enum1::a), "a");
+    CHECK_NAME(unqualified_enum_value_name(global_enum1::b), "b");
+    CHECK_NAME(unqualified_enum_value_name(global_enum1::c), "c");
+
+    CHECK_NAME(unqualified_enum_value_name(global_enum2_a), "global_enum2_a");
+    CHECK_NAME(unqualified_enum_value_name(global_enum2_b), "global_enum2_b");
+    CHECK_NAME(unqualified_enum_value_name(global_enum2_c), "global_enum2_c");
+
+    ////////////////////////////////////////
+
+    CHECK_NAME(enum_value_name(partial_enum::a), "partial_enum::a");
+    CHECK_NAME(enum_value_name(partial_enum::b), "partial_enum::b");
+    CHECK_NAME(enum_value_name(partial_enum::c), "*unknown*");
+    CHECK(enum_value_name(partial_enum::c).kind() == boost::reflecto::name_kind::unknown);
+
+    ////////////////////////////////////////
+
+    return errcount;
+}

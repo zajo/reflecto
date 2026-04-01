@@ -1,0 +1,147 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Setup Meson build directories",
+            "type": "shell",
+            "command": "cd ${workspaceRoot} && meson setup _bld/debug && meson setup -D reflecto_single_header=true _bld/debug_single_header && meson setup _bld/release --buildtype release && meson setup -D reflecto_single_header=true _bld/release_single_header --buildtype release",
+            "problemMatcher": []
+        },
+        {
+            "label": "Generate reflecto.hpp",
+            "type": "shell",
+            "command": "cd ${workspaceRoot} && python scripts/generate_single_header.py -i include/boost/reflecto/detail/all.hpp -p ${workspaceRoot}/include -o ${workspaceRoot}/test/reflecto.hpp boost/reflecto",
+            "problemMatcher": []
+        },
+        {
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "label": "Build all unit tests (debug)",
+            "type": "shell",
+            "command": "cd ${workspaceRoot}/_bld/debug && ninja",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}/_bld/debug"
+                ]
+            },
+            "windows": {
+                "problemMatcher": {
+                    "base": "$msCompile",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceRoot}/_bld/debug"
+                    ]
+                }
+            }
+        },
+        {
+            "group": "test",
+            "label": "Run all unit tests (debug)",
+            "type": "shell",
+            "dependsOn": [
+                "Generate reflecto.hpp"
+            ],
+            "dependsOrder": "sequence",
+            "command": "cd ${workspaceRoot}/_bld/debug && ninja && meson test && cd ${workspaceRoot}/_bld/debug_single_header && ninja && meson test",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}/_bld/debug"
+                ]
+            },
+            "windows": {
+                "problemMatcher": {
+                    "base": "$msCompile",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceRoot}/_bld/debug"
+                    ]
+                }
+            }
+        },
+        {
+            "group": "test",
+            "label": "Run all unit tests (release)",
+            "type": "shell",
+            "dependsOn": [
+                "Generate reflecto.hpp"
+            ],
+            "dependsOrder": "sequence",
+            "command": "cd ${workspaceRoot}/_bld/release && ninja && meson test && cd ${workspaceRoot}/_bld/release_single_header && ninja && meson test",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}/_bld/release"
+                ]
+            },
+            "windows": {
+                "problemMatcher": {
+                    "base": "$msCompile",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceRoot}/_bld/release"
+                    ]
+                }
+            }
+        },
+        {
+            "group": "test",
+            "label": "Run all unit tests (b2, all configurations)",
+            "type": "shell",
+            "dependsOn": [
+                "Generate reflecto.hpp"
+            ],
+            "dependsOrder": "sequence",
+            "command": "cd ${workspaceRoot}/test && b2 --abbreviate-paths variant=debug,release,reflecto_debug_single_header,reflecto_release_single_header cxxstd=11,14,17",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}/_bld/release"
+                ]
+            },
+            "windows": {
+                "command": "cd ${workspaceRoot}\\test && b2 --abbreviate-paths variant=debug,release,reflecto_debug_single_header,reflecto_release_single_header cxxstd=14,17,latest",
+                "problemMatcher": {
+                    "base": "$msCompile",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceRoot}/_bld/release"
+                    ]
+                }
+            }
+        },
+        {
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "label": "Test current editor file",
+            "type": "shell",
+            "command": "cd ${workspaceRoot}/_bld/debug && ninja && { meson test ${fileBasenameNoExtension} || cat ./meson-logs/testlog.txt; }",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}/_bld/debug"
+                ]
+            },
+            "windows": {
+                "command": "cd ${workspaceRoot}/_bld/debug && ninja && (meson test ${fileBasenameNoExtension} || type .\\meson-logs\\testlog.txt)",
+                "problemMatcher": {
+                    "base": "$msCompile",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceRoot}/_bld/debug"
+                    ]
+                }
+            }
+        }
+    ]
+}

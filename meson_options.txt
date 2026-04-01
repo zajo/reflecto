@@ -1,0 +1,1 @@
+option('reflecto_single_header',type:'boolean',value:false,description:'Unit tests #include "reflecto.hpp" instead of individual headers')
