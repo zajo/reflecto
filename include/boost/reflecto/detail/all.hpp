@@ -7,4 +7,3 @@
 #include <boost/reflecto/name.hpp>
 #include <boost/reflecto/enum_value_name.hpp>
 #include <boost/reflecto/type_name.hpp>
-

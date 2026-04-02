@@ -15,45 +15,27 @@ namespace boost::reflecto {
 enum class name_kind
 {
     empty,
-    unknown,
     type_name,
     enum_name,
     enum_value_name,
-    unqualified_enum_value_name
+    unqualified_enum_value_name,
+    unnamed_enum_value,
+    enum_value_out_of_lookup_range
 };
-
-constexpr char const * to_string(name_kind kind) noexcept
-{
-    switch( kind )
-    {
-    case name_kind::empty:
-        return "empty";
-    case name_kind::unknown:
-        return "unknown";
-    case name_kind::type_name:
-        return "type_name";
-    case name_kind::enum_name:
-        return "enum_name";
-    case name_kind::enum_value_name:
-        return "enum_value_name";
-    case name_kind::unqualified_enum_value_name:
-        return "unqualified_enum_value_name";
-    }
-    return nullptr;
-}
 
 ////////////////////////////////////////
 
 class name:
     public std::string_view
 {
-    name(name const &) = delete;
     name & operator=(name const &) = delete;
 
     std::uint64_t hash_;
     name_kind kind_;
 
 public:
+
+    explicit name(name const &) = default;
 
     constexpr name() noexcept:
         std::string_view(),

@@ -11,6 +11,8 @@
 
 #include "test_helpers.hpp"
 
+using namespace boost::reflecto;
+
 namespace test_ns
 {
     class class_ { };
@@ -33,10 +35,6 @@ template <int> class class_template1 { };
 template <int> struct struct_template1 { };
 template <class> class class_template2 { };
 template <class> struct struct_template2 { };
-
-using boost::reflecto::type_name;
-
-////////////////////////////////////////
 
 int main()
 {

@@ -27,12 +27,12 @@
 
 ////////////////////////////////////////
 
-#ifndef BOOST_REFLECTO_ENUM_MIN
-#   define BOOST_REFLECTO_ENUM_MIN -32
+#ifndef BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE
+#   define BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE -8
 #endif
 
-#ifndef BOOST_REFLECTO_ENUM_MAX
-#   define BOOST_REFLECTO_ENUM_MAX 127
+#ifndef BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE
+#   define BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE 63
 #endif
 
 namespace boost::reflecto {
@@ -40,8 +40,8 @@ namespace boost::reflecto {
 template <class Enum>
 struct enum_lookup_range
 {
-    static constexpr int min_value = BOOST_REFLECTO_ENUM_MIN;
-    static constexpr int max_value = BOOST_REFLECTO_ENUM_MAX;
+    static constexpr int min_value = BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE;
+    static constexpr int max_value = BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE;
 };
 
 }

@@ -17,8 +17,10 @@ project
 
 compile type_name_test.cpp ;
 compile enum_value_name_test.cpp ;
+compile enum_introspection_test.cpp ;
 compile name_test.cpp ;
 
 run type_name_test.cpp : : : <define>RUNTIME_TEST : rt_type_name_test ;
 run enum_value_name_test.cpp : : : <define>RUNTIME_TEST : rt_enum_value_name_test ;
+run enum_introspection_test.cpp : : : <define>RUNTIME_TEST : rt_enum_introspection_test ;
 run name_test.cpp : : : <define>RUNTIME_TEST : rt_name_test ;

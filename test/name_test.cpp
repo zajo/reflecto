@@ -11,11 +11,7 @@
 
 #include "test_helpers.hpp"
 
-using boost::reflecto::name;
-using boost::reflecto::name_kind;
-using boost::reflecto::to_string;
-
-////////////////////////////////////////
+using namespace boost::reflecto;
 
 int main()
 {
@@ -46,16 +42,6 @@ int main()
     CHECK(!(a != c));
     CHECK(a != b);
     CHECK(!(a == b));
-
-    ////////////////////////////////////////
-
-    CHECK_STR(to_string(name_kind::empty), "empty");
-    CHECK_STR(to_string(name_kind::unknown), "unknown");
-    CHECK_STR(to_string(name_kind::type_name), "type_name");
-    CHECK_STR(to_string(name_kind::enum_name), "enum_name");
-    CHECK_STR(to_string(name_kind::enum_value_name), "enum_value_name");
-    CHECK_STR(to_string(name_kind::unqualified_enum_value_name), "unqualified_enum_value_name");
-    CHECK(to_string(static_cast<name_kind>(999)) == nullptr);
 
     ////////////////////////////////////////
 

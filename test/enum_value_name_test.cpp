@@ -11,6 +11,8 @@
 
 #include "test_helpers.hpp"
 
+using namespace boost::reflecto;
+
 namespace test_ns
 {
     enum class enum1 { value0, value1, value2 };
@@ -30,11 +32,6 @@ struct boost::reflecto::enum_lookup_range<partial_enum>
     static constexpr int min_value = 0;
     static constexpr int max_value = 1;
 };
-
-using boost::reflecto::enum_value_name;
-using boost::reflecto::unqualified_enum_value_name;
-
-////////////////////////////////////////
 
 int main()
 {
@@ -137,7 +134,7 @@ int main()
     CHECK_NAME(enum_value_name(partial_enum::a), "partial_enum::a");
     CHECK_NAME(enum_value_name(partial_enum::b), "partial_enum::b");
     CHECK_NAME(enum_value_name(partial_enum::c), "*unknown*");
-    CHECK(enum_value_name(partial_enum::c).kind() == boost::reflecto::name_kind::unknown);
+    CHECK(enum_value_name(partial_enum::c).kind() == name_kind::enum_value_out_of_lookup_range);
 
     ////////////////////////////////////////
 
