@@ -1,6 +1,6 @@
 # Boost.Reflecto
 
-Compile-time type and enum value name extraction for C++17.
+Type name and enum value name reflection for C++17.
 
 ## Class `name`
 
@@ -11,11 +11,15 @@ equality comparison:
 class name:
     public std::string_view
 {
-    explicit name(name const &) = default;
-    name & operator=(name const &) = delete;
+    ....
 
 public:
+
+    constexpr name() noexcept;
+    explicit constexpr name(name const &) noexcept;
+
     constexpr name_kind kind() const noexcept;
+
     constexpr std::uint64_t hash() const noexcept;
 
     friend constexpr bool operator==(name const & a, name const & b) noexcept;
