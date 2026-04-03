@@ -91,66 +91,87 @@ int main()
 
     ////////////////////////////////////////
 
-    TEST_CONSTEXPR name const (&v1)[3] = enum_value_names<test_ns::enum1>();
-    CHECK_NAME(v1[0], "test_ns::enum1::value1");
-    CHECK_NAME(v1[1], "test_ns::enum1::value2");
-    CHECK_NAME(v1[2], "test_ns::enum1::value0");
+    TEST_CONSTEXPR enumerator const (&en1)[3] = enum_value_names<test_ns::enum1>();
+    CHECK_NAME(en1[0].value_name, "test_ns::enum1::value1");
+    CHECK(en1[0].value == 0);
+    CHECK_NAME(en1[1].value_name, "test_ns::enum1::value2");
+    CHECK(en1[1].value == 1);
+    CHECK_NAME(en1[2].value_name, "test_ns::enum1::value0");
+    CHECK(en1[2].value == 2);
 
-    TEST_CONSTEXPR name const (&v2)[2] = enum_value_names<test_ns::enum2>();
-    CHECK_NAME(v2[0], "test_ns::enum2::y");
-    CHECK_NAME(v2[1], "test_ns::enum2::x");
+    TEST_CONSTEXPR enumerator const (&en2)[2] = enum_value_names<test_ns::enum2>();
+    CHECK_NAME(en2[0].value_name, "test_ns::enum2::y");
+    CHECK(en2[0].value == 10);
+    CHECK_NAME(en2[1].value_name, "test_ns::enum2::x");
+    CHECK(en2[1].value == 20);
 
-    TEST_CONSTEXPR name const (&v3)[3] = enum_value_names<test_ns::enum3>();
-    CHECK_NAME(v3[0], "test_ns::enum3_value2");
-    CHECK_NAME(v3[1], "test_ns::enum3_value0");
-    CHECK_NAME(v3[2], "test_ns::enum3_value1");
+    TEST_CONSTEXPR enumerator const (&en3)[3] = enum_value_names<test_ns::enum3>();
+    CHECK_NAME(en3[0].value_name, "test_ns::enum3_value2");
+    CHECK(en3[0].value == 0);
+    CHECK_NAME(en3[1].value_name, "test_ns::enum3_value0");
+    CHECK(en3[1].value == 1);
+    CHECK_NAME(en3[2].value_name, "test_ns::enum3_value1");
+    CHECK(en3[2].value == 2);
 
-    TEST_CONSTEXPR name const (&v4)[3] = enum_value_names<global_enum1>();
-    CHECK_NAME(v4[0], "global_enum1::c");
-    CHECK_NAME(v4[1], "global_enum1::a");
-    CHECK_NAME(v4[2], "global_enum1::b");
+    TEST_CONSTEXPR enumerator const (&en4)[3] = enum_value_names<global_enum1>();
+    CHECK_NAME(en4[0].value_name, "global_enum1::c");
+    CHECK(en4[0].value == 0);
+    CHECK_NAME(en4[1].value_name, "global_enum1::a");
+    CHECK(en4[1].value == 1);
+    CHECK_NAME(en4[2].value_name, "global_enum1::b");
+    CHECK(en4[2].value == 2);
 
-    TEST_CONSTEXPR name const (&v5)[2] = enum_value_names<partial_enum>();
-    CHECK_NAME(v5[0], "partial_enum::b");
-    CHECK_NAME(v5[1], "partial_enum::a");
-
-    ////////////////////////////////////////
-
-    TEST_CONSTEXPR name const (&uv1)[3] = unqualified_enum_value_names<test_ns::enum1>();
-    CHECK_NAME(uv1[0], "value1");
-    CHECK_NAME(uv1[1], "value2");
-    CHECK_NAME(uv1[2], "value0");
-
-    TEST_CONSTEXPR name const (&uv2)[2] = unqualified_enum_value_names<test_ns::enum2>();
-    CHECK_NAME(uv2[0], "y");
-    CHECK_NAME(uv2[1], "x");
-
-    TEST_CONSTEXPR name const (&uv3)[3] = unqualified_enum_value_names<global_enum1>();
-    CHECK_NAME(uv3[0], "c");
-    CHECK_NAME(uv3[1], "a");
-    CHECK_NAME(uv3[2], "b");
+    TEST_CONSTEXPR enumerator const (&en5)[2] = enum_value_names<partial_enum>();
+    CHECK_NAME(en5[0].value_name, "partial_enum::b");
+    CHECK(en5[0].value == 0);
+    CHECK_NAME(en5[1].value_name, "partial_enum::a");
+    CHECK(en5[1].value == 1);
 
     ////////////////////////////////////////
 
-    TEST_CONSTEXPR name const (&sv1)[3] = sorted_enum_value_names<test_ns::enum1>();
-    CHECK_NAME(sv1[0], "test_ns::enum1::value0");
-    CHECK_NAME(sv1[1], "test_ns::enum1::value1");
-    CHECK_NAME(sv1[2], "test_ns::enum1::value2");
+    TEST_CONSTEXPR enumerator const (&uen1)[3] = unqualified_enum_value_names<test_ns::enum1>();
+    CHECK_NAME(uen1[0].value_name, "value1");
+    CHECK(uen1[0].value == 0);
+    CHECK_NAME(uen1[1].value_name, "value2");
+    CHECK(uen1[1].value == 1);
+    CHECK_NAME(uen1[2].value_name, "value0");
+    CHECK(uen1[2].value == 2);
 
-    TEST_CONSTEXPR name const (&sv2)[3] = sorted_enum_value_names<shuffled>();
-    CHECK_NAME(sv2[0], "shuffled::a");
-    CHECK_NAME(sv2[1], "shuffled::m");
-    CHECK_NAME(sv2[2], "shuffled::z");
+    TEST_CONSTEXPR enumerator const (&uen2)[2] = unqualified_enum_value_names<test_ns::enum2>();
+    CHECK_NAME(uen2[0].value_name, "y");
+    CHECK(uen2[0].value == 10);
+    CHECK_NAME(uen2[1].value_name, "x");
+    CHECK(uen2[1].value == 20);
 
-    TEST_CONSTEXPR name const (&suv1)[3] = sorted_unqualified_enum_value_names<test_ns::enum1>();
-    CHECK_NAME(suv1[0], "value0");
-    CHECK_NAME(suv1[1], "value1");
-    CHECK_NAME(suv1[2], "value2");
+    TEST_CONSTEXPR enumerator const (&uen3)[3] = unqualified_enum_value_names<global_enum1>();
+    CHECK_NAME(uen3[0].value_name, "c");
+    CHECK(uen3[0].value == 0);
+    CHECK_NAME(uen3[1].value_name, "a");
+    CHECK(uen3[1].value == 1);
+    CHECK_NAME(uen3[2].value_name, "b");
+    CHECK(uen3[2].value == 2);
 
-    TEST_CONSTEXPR name const (&suv2)[3] = sorted_unqualified_enum_value_names<shuffled>();
-    CHECK_NAME(suv2[0], "a");
-    CHECK_NAME(suv2[1], "m");
-    CHECK_NAME(suv2[2], "z");
+    ////////////////////////////////////////
+
+    TEST_CONSTEXPR enumerator const (&sen1)[3] = sorted_enum_value_names<test_ns::enum1>();
+    CHECK_NAME(sen1[0].value_name, "test_ns::enum1::value0");
+    CHECK_NAME(sen1[1].value_name, "test_ns::enum1::value1");
+    CHECK_NAME(sen1[2].value_name, "test_ns::enum1::value2");
+
+    TEST_CONSTEXPR enumerator const (&sen2)[3] = sorted_enum_value_names<shuffled>();
+    CHECK_NAME(sen2[0].value_name, "shuffled::a");
+    CHECK_NAME(sen2[1].value_name, "shuffled::m");
+    CHECK_NAME(sen2[2].value_name, "shuffled::z");
+
+    TEST_CONSTEXPR enumerator const (&suen1)[3] = sorted_unqualified_enum_value_names<test_ns::enum1>();
+    CHECK_NAME(suen1[0].value_name, "value0");
+    CHECK_NAME(suen1[1].value_name, "value1");
+    CHECK_NAME(suen1[2].value_name, "value2");
+
+    TEST_CONSTEXPR enumerator const (&suen2)[3] = sorted_unqualified_enum_value_names<shuffled>();
+    CHECK_NAME(suen2[0].value_name, "a");
+    CHECK_NAME(suen2[1].value_name, "m");
+    CHECK_NAME(suen2[2].value_name, "z");
 
     ////////////////////////////////////////
 

@@ -36,11 +36,13 @@ namespace d
     template <int MaxSize>
     constexpr stripped<MaxSize> strip_enum_type_prefix_and_space_before_template_closing_bracket(char const * value, int value_len, int type_len) noexcept
     {
+        BOOST_REFLECTO_ASSERT(value_len > 0);
+        BOOST_REFLECTO_ASSERT(type_len > 0);
         if( value_len <= type_len + 2 )
             return strip_space_before_template_closing_bracket<MaxSize>(value, value_len);
         stripped<MaxSize> result{};
         int unqual_start = 0;
-        for( int i = type_len - 1; i > 0; --i )
+        for( int i = type_len - 1; i != 0; --i )
         {
             if( value[i] == ':' && value[i - 1] == ':' )
             {
@@ -50,7 +52,7 @@ namespace d
         }
         int len = 0;
         std::uint64_t h = hash_start;
-        for( int i = 0; i < unqual_start; ++i )
+        for( int i = 0; i != unqual_start; ++i )
         {
             h = hash_step(h, value[i]);
             result.buf[len++] = value[i];
@@ -94,8 +96,9 @@ namespace d
     template <int MaxSize>
     constexpr stripped<MaxSize> strip_enum_value_qualification_to_buffer(char const * src, int size) noexcept
     {
+        BOOST_REFLECTO_ASSERT(size > 0);
         int start = 0;
-        for( int i = size; i > 1; --i )
+        for( int i = size; i != 1; --i )
         {
             if( src[i - 1] == ':' && src[i - 2] == ':' )
             {
@@ -106,7 +109,7 @@ namespace d
         stripped<MaxSize> result{};
         int len = 0;
         std::uint64_t h = hash_start;
-        for( int i = start; i < size; ++i )
+        for( int i = start; i != size; ++i )
         {
             h = hash_step(h, src[i]);
             result.buf[len++] = src[i];
@@ -212,6 +215,14 @@ constexpr name const & unqualified_enum_value_name() noexcept
     static_assert(static_cast<int>(EnumValue) <= enum_lookup_range<Enum>::max_value, "enum value is above enum_lookup_range::max_value");
     return d::enum_value_name_impl<EnumValue, true, d::pf_traits::unqualified_enum_value_processing>::n;
 }
+
+////////////////////////////////////////
+
+struct enumerator
+{
+    name const & value_name;
+    int value;
+};
 
 ////////////////////////////////////////
 
@@ -344,13 +355,13 @@ namespace d
     template <class Enum, int... NamedIs>
     struct named_values_holder<Enum, false, std::integer_sequence<int, NamedIs...>>
     {
-        static constexpr name values[sizeof...(NamedIs)] = { name(enum_value_name<static_cast<Enum>(NamedIs)>())... };
+        static constexpr enumerator values[sizeof...(NamedIs)] = { { enum_value_name<static_cast<Enum>(NamedIs)>(), NamedIs }... };
     };
 
     template <class Enum, int... NamedIs>
     struct named_values_holder<Enum, true, std::integer_sequence<int, NamedIs...>>
     {
-        static constexpr name values[sizeof...(NamedIs)] = { name(unqualified_enum_value_name<static_cast<Enum>(NamedIs)>())... };
+        static constexpr enumerator values[sizeof...(NamedIs)] = { { unqualified_enum_value_name<static_cast<Enum>(NamedIs)>(), NamedIs }... };
     };
 }
 
@@ -373,13 +384,13 @@ constexpr Enum max_named_enum_value() noexcept
 }
 
 template <class Enum>
-constexpr name const (&enum_value_names() noexcept)[named_enum_value_count<Enum>()]
+constexpr enumerator const (&enum_value_names() noexcept)[named_enum_value_count<Enum>()]
 {
     return d::named_values_holder<Enum, false, d::named_enum_values<Enum>>::values;
 }
 
 template <class Enum>
-constexpr name const (&unqualified_enum_value_names() noexcept)[named_enum_value_count<Enum>()]
+constexpr enumerator const (&unqualified_enum_value_names() noexcept)[named_enum_value_count<Enum>()]
 {
     return d::named_values_holder<Enum, true, d::named_enum_values<Enum>>::values;
 }
@@ -412,7 +423,7 @@ namespace d
             {
                 int key = r.v[i];
                 int j = i;
-                for( ; j && holder::values[key] < holder::values[r.v[j - 1]]; --j )
+                for( ; j && holder::values[key].value_name < holder::values[r.v[j - 1]].value_name; --j )
                     r.v[j] = r.v[j - 1];
                 r.v[j] = key;
             }
@@ -431,12 +442,12 @@ namespace d
         using si = sorted_indices<Enum, Unqualify, NamedSeq>;
         using holder = named_values_holder<Enum, Unqualify, NamedSeq>;
 
-        static constexpr name values[sizeof...(Js)] = { name(holder::values[si::value.v[Js]])... };
+        static constexpr enumerator values[sizeof...(Js)] = { holder::values[si::value.v[Js]]... };
     };
 }
 
 template <class Enum>
-constexpr name const (&sorted_enum_value_names() noexcept)[named_enum_value_count<Enum>()]
+constexpr enumerator const (&sorted_enum_value_names() noexcept)[named_enum_value_count<Enum>()]
 {
     return d::sorted_named_values_holder<
         Enum, false,
@@ -446,7 +457,7 @@ constexpr name const (&sorted_enum_value_names() noexcept)[named_enum_value_coun
 }
 
 template <class Enum>
-constexpr name const (&sorted_unqualified_enum_value_names() noexcept)[named_enum_value_count<Enum>()]
+constexpr enumerator const (&sorted_unqualified_enum_value_names() noexcept)[named_enum_value_count<Enum>()]
 {
     return d::sorted_named_values_holder<
         Enum, true,

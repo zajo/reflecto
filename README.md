@@ -70,7 +70,12 @@ All examples in this section assume:
 
 using namespace boost::reflecto;
 
-enum class color { red, green, blue };
+enum class color
+{
+    red,
+    green = 10,
+    blue = 20
+};
 ```
 
 ### `enum_value_name` / `unqualified_enum_value_name`
@@ -102,7 +107,7 @@ template <>
 struct boost::reflecto::enum_lookup_range<color>
 {
     static constexpr int min_value = 0;
-    static constexpr int max_value = 2;
+    static constexpr int max_value = 20;
 };
 ```
 
@@ -111,7 +116,7 @@ The default range in lieu of specialization is defined by
 `BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE`.
 
 > NOTE: The following `constexpr` functions operate by scanning the `enum_lookup_range`
-for named enum values:
+for named enum values.
 
 #### `named_enum_value_count`
 
@@ -128,41 +133,54 @@ static_assert(max_named_enum_value<color>() == color::blue);
 
 #### `enum_value_names` / `unqualified_enum_value_names`
 
-Return a `const` reference to a static C array of `name` objects for each named
-enum value, in order of their integer values:
+Return a `const` reference to a static C array of `enumerator` objects for each
+named enum value, in order of their integer values:
 
 ```cpp
-auto const & names = enum_value_names<color>();
-static_assert(std::is_same_v<decltype(names), name const (&)[3]>);
+auto const & entries = enum_value_names<color>();
+static_assert(std::is_same_v<decltype(entries), enumerator const (&)[3]>);
 
-static_assert(names[0] == "color::red");
-static_assert(names[1] == "color::green");
-static_assert(names[2] == "color::blue");
+static_assert(entries[0].value_name == "color::red");
+static_assert(entries[0].value == 0);
+static_assert(entries[1].value_name == "color::green");
+static_assert(entries[1].value == 10);
+static_assert(entries[2].value_name == "color::blue");
+static_assert(entries[2].value == 20);
 
-auto const & unames = unqualified_enum_value_names<color>();
-static_assert(std::is_same_v<decltype(unames), name const (&)[3]>);
+auto const & uentries = unqualified_enum_value_names<color>();
+static_assert(std::is_same_v<decltype(uentries), enumerator const (&)[3]>);
 
-static_assert(unames[0] == "red");
-static_assert(unames[1] == "green");
-static_assert(unames[2] == "blue");
+static_assert(uentries[0].value_name == "red");
+static_assert(uentries[1].value_name == "green");
+static_assert(uentries[2].value_name == "blue");
+```
+
+Iterating over named enum values:
+
+```cpp
+for (auto const & e : enum_value_names<color>())
+    std::cout << e.value_name << " = " << e.value << "\n";
 ```
 
 #### `sorted_enum_value_names` / `sorted_unqualified_enum_value_names`
 
-Same as above, but sorted lexicographically:
+Same as above, but sorted lexicographically by name:
 
 ```cpp
 auto const & sorted = sorted_enum_value_names<color>();
 
-static_assert(sorted[0] == "color::blue");
-static_assert(sorted[1] == "color::green");
-static_assert(sorted[2] == "color::red");
+static_assert(sorted[0].value_name == "color::blue");
+static_assert(sorted[0].value == 20);
+static_assert(sorted[1].value_name == "color::green");
+static_assert(sorted[1].value == 10);
+static_assert(sorted[2].value_name == "color::red");
+static_assert(sorted[2].value == 0);
 
 auto const & usorted = sorted_unqualified_enum_value_names<color>();
 
-static_assert(usorted[0] == "blue");
-static_assert(usorted[1] == "green");
-static_assert(usorted[2] == "red");
+static_assert(usorted[0].value_name == "blue");
+static_assert(usorted[1].value_name == "green");
+static_assert(usorted[2].value_name == "red");
 ```
 
 ## Limitations
