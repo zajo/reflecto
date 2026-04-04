@@ -249,34 +249,31 @@ namespace d
         static constexpr Enum value = static_cast<Enum>(I);
     };
 
-    template <int I, int Max, bool Unqualify>
-    struct enum_value_lookup
-    {
-        template <class Enum>
-        static constexpr name const & find(Enum value)
-        {
-            if( static_cast<int>(value) == I )
-            {
-                constexpr auto s = Unqualify
-                    ? pf_traits::unqualified_enum_value_processing
-                    : std::is_convertible_v<Enum, int>
-                        ? pf_traits::unscoped_enum_value_processing
-                        : pf_traits::scoped_enum_value_processing;
-                return enum_value_name_impl<enum_cast_sfinae<Enum, I>::value, Unqualify, s>::n;
-            }
-            return enum_value_lookup<I + 1, Max, Unqualify>::find(value);
-        }
-    };
+    inline constexpr name out_of_lookup_range_name{"*unknown*", 9, 11775755009147575841ull, name_kind::enum_value_out_of_lookup_range};
 
-    template <int Max, bool Unqualify>
-    struct enum_value_lookup<Max, Max, Unqualify>
-    {
-        static constexpr name unknown_name{"*unknown*", 9, 11775755009147575841ull, name_kind::enum_value_out_of_lookup_range};
+    template <class Enum, bool Unqualify,
+        class = std::make_integer_sequence<int, enum_lookup_range<Enum>::max_value - enum_lookup_range<Enum>::min_value + 1>>
+    struct enum_value_lookup_table;
 
-        template <class Enum>
-        static constexpr name const & find(Enum)
+    template <class Enum, bool Unqualify, int... Is>
+    struct enum_value_lookup_table<Enum, Unqualify, std::integer_sequence<int, Is...>>
+    {
+        static constexpr int minv = enum_lookup_range<Enum>::min_value;
+
+        static constexpr auto s = Unqualify
+            ? pf_traits::unqualified_enum_value_processing
+            : std::is_convertible_v<Enum, int>
+                ? pf_traits::unscoped_enum_value_processing
+                : pf_traits::scoped_enum_value_processing;
+
+        static constexpr name const * values[sizeof...(Is)] = { &enum_value_name_impl<enum_cast_sfinae<Enum, minv + Is>::value, Unqualify, s>::n... };
+
+        static constexpr name const & get(Enum value) noexcept
         {
-            return unknown_name;
+            int i = static_cast<int>(value);
+            if( i >= minv && i - minv < static_cast<int>(sizeof...(Is)) )
+                return *values[i - minv];
+            return out_of_lookup_range_name;
         }
     };
 }
@@ -284,13 +281,13 @@ namespace d
 template <class Enum>
 constexpr name const & enum_value_name(Enum value) noexcept
 {
-    return d::enum_value_lookup<enum_lookup_range<Enum>::min_value, enum_lookup_range<Enum>::max_value + 1, false>::find(value);
+    return d::enum_value_lookup_table<Enum, false>::get(value);
 }
 
 template <class Enum>
 constexpr name const & unqualified_enum_value_name(Enum value) noexcept
 {
-    return d::enum_value_lookup<enum_lookup_range<Enum>::min_value, enum_lookup_range<Enum>::max_value + 1, true>::find(value);
+    return d::enum_value_lookup_table<Enum, true>::get(value);
 }
 
 ////////////////////////////////////////
