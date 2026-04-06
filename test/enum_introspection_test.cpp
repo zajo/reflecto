@@ -91,7 +91,7 @@ int main()
 
     ////////////////////////////////////////
 
-    TEST_CONSTEXPR enumerator const (&en1)[3] = enum_value_names<test_ns::enum1>();
+    TEST_CONSTEXPR enumerator const (&en1)[3] = named_enum_values<test_ns::enum1>();
     CHECK_NAME(en1[0].value_name, "test_ns::enum1::value1");
     CHECK(en1[0].value == 0);
     CHECK_NAME(en1[1].value_name, "test_ns::enum1::value2");
@@ -99,13 +99,13 @@ int main()
     CHECK_NAME(en1[2].value_name, "test_ns::enum1::value0");
     CHECK(en1[2].value == 2);
 
-    TEST_CONSTEXPR enumerator const (&en2)[2] = enum_value_names<test_ns::enum2>();
+    TEST_CONSTEXPR enumerator const (&en2)[2] = named_enum_values<test_ns::enum2>();
     CHECK_NAME(en2[0].value_name, "test_ns::enum2::y");
     CHECK(en2[0].value == 10);
     CHECK_NAME(en2[1].value_name, "test_ns::enum2::x");
     CHECK(en2[1].value == 20);
 
-    TEST_CONSTEXPR enumerator const (&en3)[3] = enum_value_names<test_ns::enum3>();
+    TEST_CONSTEXPR enumerator const (&en3)[3] = named_enum_values<test_ns::enum3>();
     CHECK_NAME(en3[0].value_name, "test_ns::enum3_value2");
     CHECK(en3[0].value == 0);
     CHECK_NAME(en3[1].value_name, "test_ns::enum3_value0");
@@ -113,7 +113,7 @@ int main()
     CHECK_NAME(en3[2].value_name, "test_ns::enum3_value1");
     CHECK(en3[2].value == 2);
 
-    TEST_CONSTEXPR enumerator const (&en4)[3] = enum_value_names<global_enum1>();
+    TEST_CONSTEXPR enumerator const (&en4)[3] = named_enum_values<global_enum1>();
     CHECK_NAME(en4[0].value_name, "global_enum1::c");
     CHECK(en4[0].value == 0);
     CHECK_NAME(en4[1].value_name, "global_enum1::a");
@@ -121,7 +121,7 @@ int main()
     CHECK_NAME(en4[2].value_name, "global_enum1::b");
     CHECK(en4[2].value == 2);
 
-    TEST_CONSTEXPR enumerator const (&en5)[2] = enum_value_names<partial_enum>();
+    TEST_CONSTEXPR enumerator const (&en5)[2] = named_enum_values<partial_enum>();
     CHECK_NAME(en5[0].value_name, "partial_enum::b");
     CHECK(en5[0].value == 0);
     CHECK_NAME(en5[1].value_name, "partial_enum::a");
@@ -129,7 +129,7 @@ int main()
 
     ////////////////////////////////////////
 
-    TEST_CONSTEXPR enumerator const (&uen1)[3] = unqualified_enum_value_names<test_ns::enum1>();
+    TEST_CONSTEXPR enumerator const (&uen1)[3] = unqualified_named_enum_values<test_ns::enum1>();
     CHECK_NAME(uen1[0].value_name, "value1");
     CHECK(uen1[0].value == 0);
     CHECK_NAME(uen1[1].value_name, "value2");
@@ -137,13 +137,13 @@ int main()
     CHECK_NAME(uen1[2].value_name, "value0");
     CHECK(uen1[2].value == 2);
 
-    TEST_CONSTEXPR enumerator const (&uen2)[2] = unqualified_enum_value_names<test_ns::enum2>();
+    TEST_CONSTEXPR enumerator const (&uen2)[2] = unqualified_named_enum_values<test_ns::enum2>();
     CHECK_NAME(uen2[0].value_name, "y");
     CHECK(uen2[0].value == 10);
     CHECK_NAME(uen2[1].value_name, "x");
     CHECK(uen2[1].value == 20);
 
-    TEST_CONSTEXPR enumerator const (&uen3)[3] = unqualified_enum_value_names<global_enum1>();
+    TEST_CONSTEXPR enumerator const (&uen3)[3] = unqualified_named_enum_values<global_enum1>();
     CHECK_NAME(uen3[0].value_name, "c");
     CHECK(uen3[0].value == 0);
     CHECK_NAME(uen3[1].value_name, "a");

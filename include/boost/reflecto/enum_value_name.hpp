@@ -381,13 +381,13 @@ constexpr Enum max_named_enum_value() noexcept
 }
 
 template <class Enum>
-constexpr enumerator const (&enum_value_names() noexcept)[named_enum_value_count<Enum>()]
+constexpr enumerator const (&named_enum_values() noexcept)[named_enum_value_count<Enum>()]
 {
     return d::named_values_holder<Enum, false, d::named_enum_values<Enum>>::values;
 }
 
 template <class Enum>
-constexpr enumerator const (&unqualified_enum_value_names() noexcept)[named_enum_value_count<Enum>()]
+constexpr enumerator const (&unqualified_named_enum_values() noexcept)[named_enum_value_count<Enum>()]
 {
     return d::named_values_holder<Enum, true, d::named_enum_values<Enum>>::values;
 }

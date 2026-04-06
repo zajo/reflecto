@@ -131,13 +131,13 @@ static_assert(min_named_enum_value<color>() == color::red);
 static_assert(max_named_enum_value<color>() == color::blue);
 ```
 
-#### `enum_value_names` / `unqualified_enum_value_names`
+#### `named_enum_values` / `unqualified_named_enum_values`
 
 Return a `const` reference to a static C array of `enumerator` objects for each
 named enum value, in order of their integer values:
 
 ```cpp
-auto const & entries = enum_value_names<color>();
+auto const & entries = named_enum_values<color>();
 static_assert(std::is_same_v<decltype(entries), enumerator const (&)[3]>);
 
 static_assert(entries[0].value_name == "color::red");
@@ -147,7 +147,7 @@ static_assert(entries[1].value == 10);
 static_assert(entries[2].value_name == "color::blue");
 static_assert(entries[2].value == 20);
 
-auto const & uentries = unqualified_enum_value_names<color>();
+auto const & uentries = unqualified_named_enum_values<color>();
 static_assert(std::is_same_v<decltype(uentries), enumerator const (&)[3]>);
 
 static_assert(uentries[0].value_name == "red");
@@ -158,7 +158,7 @@ static_assert(uentries[2].value_name == "blue");
 Iterating over named enum values:
 
 ```cpp
-for (auto const & e : enum_value_names<color>())
+for (auto const & e : named_enum_values<color>())
     std::cout << e.value_name << " = " << e.value << "\n";
 ```
 
