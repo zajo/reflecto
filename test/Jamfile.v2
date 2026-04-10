@@ -19,8 +19,13 @@ compile type_name_test.cpp ;
 compile enum_value_name_test.cpp ;
 compile enum_introspection_test.cpp ;
 compile name_test.cpp ;
+compile meta_specialization_test.cpp ;
+
+compile-fail unnamed_ns_type_name_test.cpp ;
+compile-fail unnamed_ns_enum_value_name_test.cpp ;
 
 run type_name_test.cpp : : : <define>RUNTIME_TEST : rt_type_name_test ;
 run enum_value_name_test.cpp : : : <define>RUNTIME_TEST : rt_enum_value_name_test ;
 run enum_introspection_test.cpp : : : <define>RUNTIME_TEST : rt_enum_introspection_test ;
 run name_test.cpp : : : <define>RUNTIME_TEST : rt_name_test ;
+run meta_specialization_test.cpp : : : <define>RUNTIME_TEST : rt_meta_specialization_test ;

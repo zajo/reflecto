@@ -42,15 +42,6 @@ namespace d
         return result;
     }
 
-    template <class T>
-    BOOST_REFLECTO_ALWAYS_INLINE constexpr t BOOST_REFLECTO_CDECL q()
-    {
-        constexpr char const * pf = BOOST_REFLECTO_PRETTY_FUNCTION;
-        constexpr int begin = pf_traits::type_prefix_size_constexpr;
-        constexpr int size = sizeof(BOOST_REFLECTO_PRETTY_FUNCTION) - 1 - pf_traits::suffix_size - begin;
-        return { pf + begin, size };
-    }
-
     template <class T, type_processing_requirements>
     struct type_name_impl;
 

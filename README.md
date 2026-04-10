@@ -61,6 +61,8 @@ static_assert(type_name<std::vector<int>>() == "std::vector<int>");
 static_assert(type_name<std::map<int, std::vector<float>>>() == "std::map<int, std::vector<float>>");
 ```
 
+`type_name` is not supported for types enclosed in unnamed namespaces.
+
 ## Enumeration Reflection
 
 All examples in this section assume:
@@ -94,29 +96,34 @@ int main()
 }
 ```
 
-The runtime overloads scan integer values in [-8, 63] by default, returning a
-`name` with `kind() == name_kind::enum_value_out_of_lookup_range` for
-values outside the range (to help detect incomplete ranges, the compile-time
-`enum_value_name` / `unqualified_enum_value_name` force a compile error for values
-outside the range).
+The runtime overloads scan integer values in [-8, 63] by default,
+returning a `name` with
+`kind() == name_kind::enum_value_out_of_lookup_range` for values
+outside the range (to help detect insufficient ranges, the
+compile-time `enum_value_name` / `unqualified_enum_value_name` force
+a compile error for values outside the range).
 
-To customize the lookup range for a given enum, specialize `enum_lookup_range`:
+To customize the lookup range for a given enum, specialize
+`enum_lookup_range` (this uses the
+[meta specialization](#meta-specialization) interface):
 
 ```cpp
-template <>
-struct boost::reflecto::enum_lookup_range<color>
-{
-    static constexpr int min_value = 0;
-    static constexpr int max_value = 20;
-};
+namespace boost::reflecto {
+    template <>
+    struct enum_lookup_range<specialize_for_type<color>>
+    {
+        static constexpr int min_value = 0;
+        static constexpr int max_value = 20;
+    };
+}
 ```
 
 The default range in lieu of specialization is defined by
 `BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE` and
 `BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE`.
 
-> NOTE: The following `constexpr` functions operate by scanning the `enum_lookup_range`
-for named enum values.
+> NOTE: The following `constexpr` functions operate by scanning
+> the `enum_lookup_range` for named enum values.
 
 #### `named_enum_value_count`
 
@@ -182,6 +189,95 @@ static_assert(usorted[0].value_name == "blue");
 static_assert(usorted[1].value_name == "green");
 static_assert(usorted[2].value_name == "red");
 ```
+
+## Meta Specialization
+
+Reflecto provides a mechanism for specializing class templates not
+just for a specific type, but also for all types in a given namespace.
+The `enum_lookup_range` template uses this system, so it can be
+specialized for a specific enum or for all enums in a given namespace,
+allowing independent libraries to configure their own ranges without
+clashing.
+
+A class template that supports meta specialization is parameterized by a
+`meta_key`. The default, unspecialized instantiation is required to derive
+from `unspecialized`. For example, `enum_lookup_range` is defined as:
+
+```cpp
+template <meta_key>
+struct enum_lookup_range: unspecialized
+{
+    static constexpr int min_value = BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE;
+    static constexpr int max_value = BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE;
+};
+```
+
+By convention, to define a specialization for all types from a given
+namespace, use `specialize_for_namespace`:
+
+```cpp
+namespace lib_a
+{
+    struct this_namespace;
+
+    enum class status
+    {
+        ok,
+        fail
+    };
+}
+
+namespace boost::reflecto
+{
+    template <>
+    struct enum_lookup_range<specialize_for_namespace<lib_a::this_namespace>>
+    {
+        static constexpr int min_value = 0;
+        static constexpr int max_value = 255;
+    };
+}
+```
+
+A different library can define its own specialization without
+clashing:
+
+```cpp
+namespace lib_b
+{
+    struct this_namespace;
+
+    enum class mode
+    {
+        fast,
+        slow
+    };
+}
+
+namespace boost::reflecto
+{
+    template <>
+    struct enum_lookup_range<specialize_for_namespace<lib_b::this_namespace>>
+    {
+        static constexpr int min_value = -100;
+        static constexpr int max_value = 100;
+    };
+}
+```
+
+With this in place, `meta_select_t` selects the correct specialization
+based on the namespace of the given type:
+
+```cpp
+using ra = meta_select_t<enum_lookup_range, lib_a::status>;
+static_assert(ra::min_value == 0 && ra::max_value == 255);
+
+using rb = meta_select_t<enum_lookup_range, lib_b::mode>;
+static_assert(rb::min_value == -100 && rb::max_value == 100);
+```
+
+Type-specific specializations are also supported using
+`specialize_for_type` (as shown in the `color` example earlier), and
+take precedence over namespace specializations.
 
 ## Limitations
 
