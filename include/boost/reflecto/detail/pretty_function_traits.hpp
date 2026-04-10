@@ -208,7 +208,7 @@ namespace d
     constexpr bool has_unnamed_ns(char const * s, int size) noexcept
     {
         for( int i = 1; i < size; ++i )
-            if( s[i] == ':' && (s[i - 1] == ')' || s[i - 1] == '\'') )
+            if( s[i] == ':' && (s[i - 1] == ')' || s[i - 1] == '}' || s[i - 1] == '\'') )
                 return true;
         return false;
     }
