@@ -74,20 +74,12 @@ namespace d
         return result;
     }
 
-    struct v { int value; };
-
-    template <class T>
-    constexpr v BOOST_REFLECTO_CDECL r()
-    {
-        return { sizeof(BOOST_REFLECTO_PRETTY_FUNCTION) - 1 - pf_traits::type_prefix_size_constexpr - pf_traits::suffix_size };
-    }
-
     template <class Enum, Enum Value>
     constexpr t BOOST_REFLECTO_CDECL g()
     {
         static_assert(std::is_enum<Enum>::value, "d::g requires an enum type");
         constexpr char const * pf = BOOST_REFLECTO_PRETTY_FUNCTION;
-        constexpr int type_len = r<Enum>().value;
+        constexpr int type_len = q<Enum>().size;
         constexpr int value_start = pf_traits::enum_prefix_size_constexpr + type_len + pf_traits::enum_separator_size;
         constexpr int end = sizeof(BOOST_REFLECTO_PRETTY_FUNCTION) - 1 - pf_traits::suffix_size;
         return { pf + value_start, end - value_start };
@@ -132,7 +124,6 @@ namespace d
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
-        static_assert(!has_unnamed_ns(x.begin, x.size), "unnamed namespaces are not allowed");
         static constexpr name n{x.begin, x.size, hash_sequence(x.begin, x.begin + x.size),
             is_named_enum_value_name(x.begin[0]) ? name_kind::enum_value_name : name_kind::unnamed_enum_value};
     };
@@ -142,7 +133,6 @@ namespace d
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
-        static_assert(!has_unnamed_ns(x.begin, x.size), "unnamed namespaces are not allowed");
         static constexpr stripped<x.size> s = strip_space_before_template_closing_bracket<x.size>(x.begin, x.size);
         static constexpr bool named = is_named_enum_value_name(x.begin[0]);
         static constexpr name n{
@@ -157,8 +147,7 @@ namespace d
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
-        static_assert(!has_unnamed_ns(x.begin, x.size), "unnamed namespaces are not allowed");
-        static constexpr stripped<x.size> s = strip_enum_type_prefix_and_space_before_template_closing_bracket<x.size>(x.begin, x.size, r<Enum>().value);
+        static constexpr stripped<x.size> s = strip_enum_type_prefix_and_space_before_template_closing_bracket<x.size>(x.begin, x.size, q<Enum>().size);
         static constexpr bool named = is_named_enum_value_name(x.begin[0]);
         static constexpr name n{
             named ? s.buf : x.begin,

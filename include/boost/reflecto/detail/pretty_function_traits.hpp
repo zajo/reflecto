@@ -205,14 +205,6 @@ namespace d
         return h;
     }
 
-    constexpr bool has_unnamed_ns(char const * s, int size) noexcept
-    {
-        for( int i = 1; i < size; ++i )
-            if( s[i] == ':' && (s[i - 1] == ')' || s[i - 1] == '}' || s[i - 1] == '\'') )
-                return true;
-        return false;
-    }
-
     ////////////////////////////////////////
 
     template <int MaxSize>
@@ -302,6 +294,24 @@ namespace d
         char const * begin;
         int size;
     };
+
+    constexpr bool has_unnamed_ns(char const * s, int size) noexcept
+    {
+        for( int i = 1; i < size; ++i )
+            if( s[i] == ':' && (s[i - 1] == ')' || s[i - 1] == '\'' || s[i - 1] == '}') )
+                return true;
+        return false;
+    }
+
+    template <class T>
+    constexpr t BOOST_REFLECTO_CDECL q()
+    {
+        constexpr char const * pf = BOOST_REFLECTO_PRETTY_FUNCTION;
+        constexpr int b = pf_traits::type_prefix_size_constexpr;
+        constexpr int size = sizeof(BOOST_REFLECTO_PRETTY_FUNCTION) - 1 - pf_traits::suffix_size - b;
+        static_assert(!has_unnamed_ns(pf + b, size), "unnamed namespaces are not allowed");
+        return { pf + b, size };
+    }
 }
 
 }
