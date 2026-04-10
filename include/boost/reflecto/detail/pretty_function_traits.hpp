@@ -205,6 +205,14 @@ namespace d
         return h;
     }
 
+    constexpr bool has_unnamed_ns(char const * s, int size) noexcept
+    {
+        for( int i = 1; i < size; ++i )
+            if( s[i] == ':' && (s[i - 1] == ')' || s[i - 1] == '\'') )
+                return true;
+        return false;
+    }
+
     ////////////////////////////////////////
 
     template <int MaxSize>
@@ -253,7 +261,7 @@ namespace d
     enum e { w };
 
     template <class Enum, Enum Value>
-    BOOST_REFLECTO_ALWAYS_INLINE constexpr c BOOST_REFLECTO_CDECL p()
+    constexpr c BOOST_REFLECTO_CDECL p()
     {
         static_assert(std::is_enum<Enum>::value);
         return

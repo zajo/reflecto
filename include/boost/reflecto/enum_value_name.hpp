@@ -7,7 +7,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/reflecto/config.hpp>
-#include <boost/reflecto/detail/pretty_function_traits.hpp>
+#include <boost/reflecto/meta_specialization.hpp>
 #include <boost/reflecto/name.hpp>
 #include <utility>
 
@@ -77,13 +77,13 @@ namespace d
     struct v { int value; };
 
     template <class T>
-    BOOST_REFLECTO_ALWAYS_INLINE constexpr v BOOST_REFLECTO_CDECL r()
+    constexpr v BOOST_REFLECTO_CDECL r()
     {
         return { sizeof(BOOST_REFLECTO_PRETTY_FUNCTION) - 1 - pf_traits::type_prefix_size_constexpr - pf_traits::suffix_size };
     }
 
     template <class Enum, Enum Value>
-    BOOST_REFLECTO_ALWAYS_INLINE constexpr t BOOST_REFLECTO_CDECL g()
+    constexpr t BOOST_REFLECTO_CDECL g()
     {
         static_assert(std::is_enum<Enum>::value, "d::g requires an enum type");
         constexpr char const * pf = BOOST_REFLECTO_PRETTY_FUNCTION;
@@ -132,6 +132,7 @@ namespace d
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
+        static_assert(!has_unnamed_ns(x.begin, x.size), "unnamed namespaces are not allowed");
         static constexpr name n{x.begin, x.size, hash_sequence(x.begin, x.begin + x.size),
             is_named_enum_value_name(x.begin[0]) ? name_kind::enum_value_name : name_kind::unnamed_enum_value};
     };
@@ -141,6 +142,7 @@ namespace d
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
+        static_assert(!has_unnamed_ns(x.begin, x.size), "unnamed namespaces are not allowed");
         static constexpr stripped<x.size> s = strip_space_before_template_closing_bracket<x.size>(x.begin, x.size);
         static constexpr bool named = is_named_enum_value_name(x.begin[0]);
         static constexpr name n{
@@ -155,6 +157,7 @@ namespace d
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
+        static_assert(!has_unnamed_ns(x.begin, x.size), "unnamed namespaces are not allowed");
         static constexpr stripped<x.size> s = strip_enum_type_prefix_and_space_before_template_closing_bracket<x.size>(x.begin, x.size, r<Enum>().value);
         static constexpr bool named = is_named_enum_value_name(x.begin[0]);
         static constexpr name n{
@@ -198,8 +201,8 @@ constexpr name const & enum_value_name() noexcept
 {
     using Enum = decltype(EnumValue);
     static_assert(std::is_enum_v<Enum>);
-    static_assert(static_cast<int>(EnumValue) >= enum_lookup_range<Enum>::min_value, "enum value is below enum_lookup_range::min_value");
-    static_assert(static_cast<int>(EnumValue) <= enum_lookup_range<Enum>::max_value, "enum value is above enum_lookup_range::max_value");
+    static_assert(static_cast<int>(EnumValue) >= meta_select_t<enum_lookup_range, Enum>::min_value, "enum value is below enum_lookup_range::min_value");
+    static_assert(static_cast<int>(EnumValue) <= meta_select_t<enum_lookup_range, Enum>::max_value, "enum value is above enum_lookup_range::max_value");
     constexpr auto s = std::is_convertible_v<Enum, int>
         ? d::pf_traits::unscoped_enum_value_processing
         : d::pf_traits::scoped_enum_value_processing;
@@ -211,8 +214,8 @@ constexpr name const & unqualified_enum_value_name() noexcept
 {
     using Enum = decltype(EnumValue);
     static_assert(std::is_enum_v<Enum>);
-    static_assert(static_cast<int>(EnumValue) >= enum_lookup_range<Enum>::min_value, "enum value is below enum_lookup_range::min_value");
-    static_assert(static_cast<int>(EnumValue) <= enum_lookup_range<Enum>::max_value, "enum value is above enum_lookup_range::max_value");
+    static_assert(static_cast<int>(EnumValue) >= meta_select_t<enum_lookup_range, Enum>::min_value, "enum value is below enum_lookup_range::min_value");
+    static_assert(static_cast<int>(EnumValue) <= meta_select_t<enum_lookup_range, Enum>::max_value, "enum value is above enum_lookup_range::max_value");
     return d::enum_value_name_impl<EnumValue, true, d::pf_traits::unqualified_enum_value_processing>::n;
 }
 
@@ -252,13 +255,13 @@ namespace d
     inline constexpr name out_of_lookup_range_name{"*unknown*", 9, 11775755009147575841ull, name_kind::enum_value_out_of_lookup_range};
 
     template <class Enum, bool Unqualify,
-        class = std::make_integer_sequence<int, enum_lookup_range<Enum>::max_value - enum_lookup_range<Enum>::min_value + 1>>
+        class = std::make_integer_sequence<int, meta_select_t<enum_lookup_range, Enum>::max_value - meta_select_t<enum_lookup_range, Enum>::min_value + 1>>
     struct enum_value_lookup_table;
 
     template <class Enum, bool Unqualify, int... Is>
     struct enum_value_lookup_table<Enum, Unqualify, std::integer_sequence<int, Is...>>
     {
-        static constexpr int minv = enum_lookup_range<Enum>::min_value;
+        static constexpr int minv = meta_select_t<enum_lookup_range, Enum>::min_value;
 
         static constexpr auto s = Unqualify
             ? pf_traits::unqualified_enum_value_processing
@@ -320,7 +323,7 @@ namespace d
     };
 
     template <class Enum>
-    using named_enum_values = typename collect_named<Enum, enum_lookup_range<Enum>::min_value, enum_lookup_range<Enum>::max_value + 1>::type;
+    using named_enum_values = typename collect_named<Enum, meta_select_t<enum_lookup_range, Enum>::min_value, meta_select_t<enum_lookup_range, Enum>::max_value + 1>::type;
 
     template <class Enum, int I, int Max, bool = is_named_enum_value<Enum, I>::value>
     struct find_first_named
@@ -371,13 +374,13 @@ constexpr int named_enum_value_count() noexcept
 template <class Enum>
 constexpr Enum min_named_enum_value() noexcept
 {
-    return static_cast<Enum>(d::find_first_named<Enum, enum_lookup_range<Enum>::min_value, enum_lookup_range<Enum>::max_value + 1>::value);
+    return static_cast<Enum>(d::find_first_named<Enum, meta_select_t<enum_lookup_range, Enum>::min_value, meta_select_t<enum_lookup_range, Enum>::max_value + 1>::value);
 }
 
 template <class Enum>
 constexpr Enum max_named_enum_value() noexcept
 {
-    return static_cast<Enum>(d::find_last_named<Enum, enum_lookup_range<Enum>::max_value, enum_lookup_range<Enum>::min_value>::value);
+    return static_cast<Enum>(d::find_last_named<Enum, meta_select_t<enum_lookup_range, Enum>::max_value, meta_select_t<enum_lookup_range, Enum>::min_value>::value);
 }
 
 template <class Enum>

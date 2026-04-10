@@ -24,14 +24,16 @@ namespace test_ns
 enum class global_enum1 { a, b, c };
 enum global_enum2 { global_enum2_a, global_enum2_b, global_enum2_c };
 
-enum class partial_enum { a, b, c };
+enum class range_test_enum { a, b, c };
 
+namespace boost::reflecto {
 template <>
-struct boost::reflecto::enum_lookup_range<partial_enum>
+struct enum_lookup_range<specialize_for_type<range_test_enum>>
 {
     static constexpr int min_value = 0;
     static constexpr int max_value = 1;
 };
+}
 
 int main()
 {
@@ -131,10 +133,10 @@ int main()
 
     ////////////////////////////////////////
 
-    CHECK_NAME(enum_value_name(partial_enum::a), "partial_enum::a");
-    CHECK_NAME(enum_value_name(partial_enum::b), "partial_enum::b");
-    CHECK_NAME(enum_value_name(partial_enum::c), "*unknown*");
-    CHECK(enum_value_name(partial_enum::c).kind() == name_kind::enum_value_out_of_lookup_range);
+    CHECK_NAME(enum_value_name(range_test_enum::a), "range_test_enum::a");
+    CHECK_NAME(enum_value_name(range_test_enum::b), "range_test_enum::b");
+    CHECK_NAME(enum_value_name(range_test_enum::c), "*unknown*");
+    CHECK(enum_value_name(range_test_enum::c).kind() == name_kind::enum_value_out_of_lookup_range);
 
     ////////////////////////////////////////
 

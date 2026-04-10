@@ -43,7 +43,7 @@ namespace d
     }
 
     template <class T>
-    BOOST_REFLECTO_ALWAYS_INLINE constexpr t BOOST_REFLECTO_CDECL q()
+    constexpr t BOOST_REFLECTO_CDECL q()
     {
         constexpr char const * pf = BOOST_REFLECTO_PRETTY_FUNCTION;
         constexpr int begin = pf_traits::type_prefix_size_constexpr;
@@ -58,6 +58,7 @@ namespace d
     struct type_name_impl<T, type_processing_requirements::none>
     {
         static constexpr t x = q<T>();
+        static_assert(!has_unnamed_ns(x.begin, x.size), "unnamed namespaces are not allowed");
         static constexpr name n{x.begin, x.size, hash_sequence(x.begin, x.begin + x.size),
             std::is_enum_v<T> ? name_kind::enum_name : name_kind::type_name};
     };
@@ -66,6 +67,7 @@ namespace d
     struct type_name_impl<T, type_processing_requirements::strip_space_before_template_closing_bracket>
     {
         static constexpr t x = q<T>();
+        static_assert(!has_unnamed_ns(x.begin, x.size), "unnamed namespaces are not allowed");
         static constexpr d::stripped<x.size> s = strip_space_before_template_closing_bracket<x.size>(x.begin, x.size);
         static constexpr name n{s.buf, s.len, s.hash,
             std::is_enum_v<T> ? name_kind::enum_name : name_kind::type_name};
@@ -75,6 +77,7 @@ namespace d
     struct type_name_impl<T, type_processing_requirements::strip_keywords_and_space_before_template_closing_bracket>
     {
         static constexpr t x = q<T>();
+        static_assert(!has_unnamed_ns(x.begin, x.size), "unnamed namespaces are not allowed");
         static constexpr d::stripped<x.size> s = strip_keywords_and_space_before_template_closing_bracket<x.size>(x.begin, x.size);
         static constexpr name n{s.buf, s.len, s.hash,
             std::is_enum_v<T> ? name_kind::enum_name : name_kind::type_name};

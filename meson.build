@@ -30,6 +30,7 @@ tests = [
     'type_name_test',
     'enum_value_name_test',
     'enum_introspection_test',
+    'meta_specialization_test',
 ]
 
 dep_test_single_header = []

@@ -84,14 +84,14 @@ bool check_str_rt(char const * a, char const * b, char const * file, int line)
 namespace boost::reflecto::d
 {
     template <class T>
-    BOOST_REFLECTO_ALWAYS_INLINE constexpr t BOOST_REFLECTO_CDECL a()
+    constexpr t BOOST_REFLECTO_CDECL a()
     {
         std::cerr << "  a: " << BOOST_REFLECTO_PRETTY_FUNCTION << '\n';
         return {};
     }
 
     template <class Enum, Enum Value>
-    BOOST_REFLECTO_ALWAYS_INLINE constexpr t BOOST_REFLECTO_CDECL b()
+    constexpr t BOOST_REFLECTO_CDECL b()
     {
         std::cerr << "  b: " << BOOST_REFLECTO_PRETTY_FUNCTION << '\n';
         return {};

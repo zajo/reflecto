@@ -22,16 +22,18 @@ namespace test_ns
 
 enum class global_enum1 { c = 0, a = 1, b = 2 };
 
-enum class partial_enum { b = 0, a = 1, c = 2 };
+enum class range_test_enum { b = 0, a = 1, c = 2 };
 
 enum class shuffled { z = 0, a = 1, m = 2 };
 
+namespace boost::reflecto {
 template <>
-struct boost::reflecto::enum_lookup_range<partial_enum>
+struct enum_lookup_range<specialize_for_type<range_test_enum>>
 {
     static constexpr int min_value = 0;
     static constexpr int max_value = 1;
 };
+}
 
 #if defined(__clang__) && __clang_major__ >= 15 && __clang_major__ < 20
 #   pragma clang diagnostic push
@@ -74,7 +76,7 @@ int main()
     CHECK(named_enum_value_count<test_ns::enum2>() == 2);
     CHECK(named_enum_value_count<test_ns::enum3>() == 3);
     CHECK(named_enum_value_count<global_enum1>() == 3);
-    CHECK(named_enum_value_count<partial_enum>() == 2);
+    CHECK(named_enum_value_count<range_test_enum>() == 2);
 
     ////////////////////////////////////////
 
@@ -86,8 +88,8 @@ int main()
     CHECK(max_named_enum_value<global_enum1>() == global_enum1::b);
     CHECK(min_named_enum_value<shuffled>() == shuffled::z);
     CHECK(max_named_enum_value<shuffled>() == shuffled::m);
-    CHECK(min_named_enum_value<partial_enum>() == partial_enum::b);
-    CHECK(max_named_enum_value<partial_enum>() == partial_enum::a);
+    CHECK(min_named_enum_value<range_test_enum>() == range_test_enum::b);
+    CHECK(max_named_enum_value<range_test_enum>() == range_test_enum::a);
 
     ////////////////////////////////////////
 
@@ -121,10 +123,10 @@ int main()
     CHECK_NAME(en4[2].value_name, "global_enum1::b");
     CHECK(en4[2].value == 2);
 
-    TEST_CONSTEXPR enumerator const (&en5)[2] = named_enum_values<partial_enum>();
-    CHECK_NAME(en5[0].value_name, "partial_enum::b");
+    TEST_CONSTEXPR enumerator const (&en5)[2] = named_enum_values<range_test_enum>();
+    CHECK_NAME(en5[0].value_name, "range_test_enum::b");
     CHECK(en5[0].value == 0);
-    CHECK_NAME(en5[1].value_name, "partial_enum::a");
+    CHECK_NAME(en5[1].value_name, "range_test_enum::a");
     CHECK(en5[1].value == 1);
 
     ////////////////////////////////////////
