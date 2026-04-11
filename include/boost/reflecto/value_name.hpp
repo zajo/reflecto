@@ -1,5 +1,5 @@
-#ifndef BOOST_REFLECTO_ENUM_VALUE_NAME_HPP_INCLUDED
-#define BOOST_REFLECTO_ENUM_VALUE_NAME_HPP_INCLUDED
+#ifndef BOOST_REFLECTO_VALUE_NAME_HPP_INCLUDED
+#define BOOST_REFLECTO_VALUE_NAME_HPP_INCLUDED
 
 // Copyright 2026 Emil Dotchevski
 
@@ -117,19 +117,19 @@ namespace d
     }
 
     template <auto EnumValue, bool Unqualify, enum_value_processing_requirements>
-    struct enum_value_name_impl;
+    struct value_name_impl;
 
     template <auto EnumValue>
-    struct enum_value_name_impl<EnumValue, false, enum_value_processing_requirements::none>
+    struct value_name_impl<EnumValue, false, enum_value_processing_requirements::none>
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
         static constexpr name n{x.begin, x.size, hash_sequence(x.begin, x.begin + x.size),
-            is_named_enum_value_name(x.begin[0]) ? name_kind::enum_value_name : name_kind::unnamed_enum_value};
+            is_named_enum_value_name(x.begin[0]) ? name_kind::value_name : name_kind::unnamed_value};
     };
 
     template <auto EnumValue>
-    struct enum_value_name_impl<EnumValue, false, enum_value_processing_requirements::strip_space_before_template_closing_bracket>
+    struct value_name_impl<EnumValue, false, enum_value_processing_requirements::strip_space_before_template_closing_bracket>
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
@@ -139,11 +139,11 @@ namespace d
             named ? s.buf : x.begin,
             named ? s.len : x.size,
             named ? s.hash : hash_sequence(x.begin, x.begin + x.size),
-            named ? name_kind::enum_value_name : name_kind::unnamed_enum_value};
+            named ? name_kind::value_name : name_kind::unnamed_value};
     };
 
     template <auto EnumValue>
-    struct enum_value_name_impl<EnumValue, false, enum_value_processing_requirements::strip_type_prefix_and_space_before_template_closing_bracket>
+    struct value_name_impl<EnumValue, false, enum_value_processing_requirements::strip_type_prefix_and_space_before_template_closing_bracket>
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
@@ -153,11 +153,11 @@ namespace d
             named ? s.buf : x.begin,
             named ? s.len : x.size,
             named ? s.hash : hash_sequence(x.begin, x.begin + x.size),
-            named ? name_kind::enum_value_name : name_kind::unnamed_enum_value};
+            named ? name_kind::value_name : name_kind::unnamed_value};
     };
 
     template <auto EnumValue>
-    struct enum_value_name_impl<EnumValue, true, enum_value_processing_requirements::none>
+    struct value_name_impl<EnumValue, true, enum_value_processing_requirements::none>
     {
         using Enum = decltype(EnumValue);
         static constexpr t raw = g<Enum, EnumValue>();
@@ -167,11 +167,11 @@ namespace d
             named ? x.begin : raw.begin,
             named ? x.size : raw.size,
             named ? hash_sequence(x.begin, x.begin + x.size) : hash_sequence(raw.begin, raw.begin + raw.size),
-            named ? name_kind::unqualified_enum_value_name : name_kind::unnamed_enum_value};
+            named ? name_kind::short_value_name : name_kind::unnamed_value};
     };
 
     template <auto EnumValue>
-    struct enum_value_name_impl<EnumValue, true, enum_value_processing_requirements::copy_pretty_function_string>
+    struct value_name_impl<EnumValue, true, enum_value_processing_requirements::copy_pretty_function_string>
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
@@ -181,12 +181,12 @@ namespace d
             named ? s.buf : x.begin,
             named ? s.len : x.size,
             named ? s.hash : hash_sequence(x.begin, x.begin + x.size),
-            named ? name_kind::unqualified_enum_value_name : name_kind::unnamed_enum_value};
+            named ? name_kind::short_value_name : name_kind::unnamed_value};
     };
 }
 
 template <auto EnumValue>
-constexpr name const & enum_value_name() noexcept
+constexpr name const & value_name() noexcept
 {
     using Enum = decltype(EnumValue);
     static_assert(std::is_enum_v<Enum>);
@@ -195,17 +195,17 @@ constexpr name const & enum_value_name() noexcept
     constexpr auto s = std::is_convertible_v<Enum, int>
         ? d::pf_traits::unscoped_enum_value_processing
         : d::pf_traits::scoped_enum_value_processing;
-    return d::enum_value_name_impl<EnumValue, false, s>::n;
+    return d::value_name_impl<EnumValue, false, s>::n;
 }
 
 template <auto EnumValue>
-constexpr name const & unqualified_enum_value_name() noexcept
+constexpr name const & short_value_name() noexcept
 {
     using Enum = decltype(EnumValue);
     static_assert(std::is_enum_v<Enum>);
     static_assert(static_cast<int>(EnumValue) >= meta_select_t<enum_lookup_range, Enum>::min_value, "enum value is below enum_lookup_range::min_value");
     static_assert(static_cast<int>(EnumValue) <= meta_select_t<enum_lookup_range, Enum>::max_value, "enum value is above enum_lookup_range::max_value");
-    return d::enum_value_name_impl<EnumValue, true, d::pf_traits::unqualified_enum_value_processing>::n;
+    return d::value_name_impl<EnumValue, true, d::pf_traits::unqualified_enum_value_processing>::n;
 }
 
 ////////////////////////////////////////
@@ -241,14 +241,14 @@ namespace d
         static constexpr Enum value = static_cast<Enum>(I);
     };
 
-    inline constexpr name out_of_lookup_range_name{"*unknown*", 9, 11775755009147575841ull, name_kind::enum_value_out_of_lookup_range};
+    inline constexpr name out_of_lookup_range_name{"*unknown*", 9, 11775755009147575841ull, name_kind::value_out_of_lookup_range};
 
     template <class Enum, bool Unqualify,
         class = std::make_integer_sequence<int, meta_select_t<enum_lookup_range, Enum>::max_value - meta_select_t<enum_lookup_range, Enum>::min_value + 1>>
-    struct enum_value_lookup_table;
+    struct value_lookup_table;
 
     template <class Enum, bool Unqualify, int... Is>
-    struct enum_value_lookup_table<Enum, Unqualify, std::integer_sequence<int, Is...>>
+    struct value_lookup_table<Enum, Unqualify, std::integer_sequence<int, Is...>>
     {
         static constexpr int minv = meta_select_t<enum_lookup_range, Enum>::min_value;
 
@@ -258,7 +258,7 @@ namespace d
                 ? pf_traits::unscoped_enum_value_processing
                 : pf_traits::scoped_enum_value_processing;
 
-        static constexpr name const * values[sizeof...(Is)] = { &enum_value_name_impl<enum_cast_sfinae<Enum, minv + Is>::value, Unqualify, s>::n... };
+        static constexpr name const * values[sizeof...(Is)] = { &value_name_impl<enum_cast_sfinae<Enum, minv + Is>::value, Unqualify, s>::n... };
 
         static constexpr name const & get(Enum value) noexcept
         {
@@ -271,15 +271,15 @@ namespace d
 }
 
 template <class Enum>
-constexpr name const & enum_value_name(Enum value) noexcept
+constexpr name const & value_name(Enum value) noexcept
 {
-    return d::enum_value_lookup_table<Enum, false>::get(value);
+    return d::value_lookup_table<Enum, false>::get(value);
 }
 
 template <class Enum>
-constexpr name const & unqualified_enum_value_name(Enum value) noexcept
+constexpr name const & short_value_name(Enum value) noexcept
 {
-    return d::enum_value_lookup_table<Enum, true>::get(value);
+    return d::value_lookup_table<Enum, true>::get(value);
 }
 
 ////////////////////////////////////////
@@ -312,7 +312,7 @@ namespace d
     };
 
     template <class Enum>
-    using named_enum_values = typename collect_named<Enum, meta_select_t<enum_lookup_range, Enum>::min_value, meta_select_t<enum_lookup_range, Enum>::max_value + 1>::type;
+    using named_values_seq = typename collect_named<Enum, meta_select_t<enum_lookup_range, Enum>::min_value, meta_select_t<enum_lookup_range, Enum>::max_value + 1>::type;
 
     template <class Enum, int I, int Max, bool = is_named_enum_value<Enum, I>::value>
     struct find_first_named
@@ -344,44 +344,44 @@ namespace d
     template <class Enum, int... NamedIs>
     struct named_values_holder<Enum, false, std::integer_sequence<int, NamedIs...>>
     {
-        static constexpr enumerator values[sizeof...(NamedIs)] = { { enum_value_name<static_cast<Enum>(NamedIs)>(), NamedIs }... };
+        static constexpr enumerator values[sizeof...(NamedIs)] = { { value_name<static_cast<Enum>(NamedIs)>(), NamedIs }... };
     };
 
     template <class Enum, int... NamedIs>
     struct named_values_holder<Enum, true, std::integer_sequence<int, NamedIs...>>
     {
-        static constexpr enumerator values[sizeof...(NamedIs)] = { { unqualified_enum_value_name<static_cast<Enum>(NamedIs)>(), NamedIs }... };
+        static constexpr enumerator values[sizeof...(NamedIs)] = { { short_value_name<static_cast<Enum>(NamedIs)>(), NamedIs }... };
     };
 }
 
 template <class Enum>
-constexpr int named_enum_value_count() noexcept
+constexpr int named_value_count() noexcept
 {
-    return d::named_enum_values<Enum>::size();
+    return d::named_values_seq<Enum>::size();
 }
 
 template <class Enum>
-constexpr Enum min_named_enum_value() noexcept
+constexpr Enum min_named_value() noexcept
 {
     return static_cast<Enum>(d::find_first_named<Enum, meta_select_t<enum_lookup_range, Enum>::min_value, meta_select_t<enum_lookup_range, Enum>::max_value + 1>::value);
 }
 
 template <class Enum>
-constexpr Enum max_named_enum_value() noexcept
+constexpr Enum max_named_value() noexcept
 {
     return static_cast<Enum>(d::find_last_named<Enum, meta_select_t<enum_lookup_range, Enum>::max_value, meta_select_t<enum_lookup_range, Enum>::min_value>::value);
 }
 
 template <class Enum>
-constexpr enumerator const (&named_enum_values() noexcept)[named_enum_value_count<Enum>()]
+constexpr enumerator const (&named_values() noexcept)[named_value_count<Enum>()]
 {
-    return d::named_values_holder<Enum, false, d::named_enum_values<Enum>>::values;
+    return d::named_values_holder<Enum, false, d::named_values_seq<Enum>>::values;
 }
 
 template <class Enum>
-constexpr enumerator const (&unqualified_named_enum_values() noexcept)[named_enum_value_count<Enum>()]
+constexpr enumerator const (&short_named_values() noexcept)[named_value_count<Enum>()]
 {
-    return d::named_values_holder<Enum, true, d::named_enum_values<Enum>>::values;
+    return d::named_values_holder<Enum, true, d::named_values_seq<Enum>>::values;
 }
 
 ////////////////////////////////////////
@@ -436,22 +436,22 @@ namespace d
 }
 
 template <class Enum>
-constexpr enumerator const (&sorted_enum_value_names() noexcept)[named_enum_value_count<Enum>()]
+constexpr enumerator const (&sorted_named_values() noexcept)[named_value_count<Enum>()]
 {
     return d::sorted_named_values_holder<
         Enum, false,
-        d::named_enum_values<Enum>,
-        std::make_index_sequence<named_enum_value_count<Enum>()>
+        d::named_values_seq<Enum>,
+        std::make_index_sequence<named_value_count<Enum>()>
     >::values;
 }
 
 template <class Enum>
-constexpr enumerator const (&sorted_unqualified_enum_value_names() noexcept)[named_enum_value_count<Enum>()]
+constexpr enumerator const (&sorted_short_named_values() noexcept)[named_value_count<Enum>()]
 {
     return d::sorted_named_values_holder<
         Enum, true,
-        d::named_enum_values<Enum>,
-        std::make_index_sequence<named_enum_value_count<Enum>()>
+        d::named_values_seq<Enum>,
+        std::make_index_sequence<named_value_count<Enum>()>
     >::values;
 }
 
@@ -461,4 +461,4 @@ constexpr enumerator const (&sorted_unqualified_enum_value_names() noexcept)[nam
 #   pragma clang diagnostic pop
 #endif
 
-#endif // #ifndef BOOST_REFLECTO_ENUM_VALUE_NAME_HPP_INCLUDED
+#endif // #ifndef BOOST_REFLECTO_VALUE_NAME_HPP_INCLUDED

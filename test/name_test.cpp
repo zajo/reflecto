@@ -25,8 +25,8 @@ int main()
     ////////////////////////////////////////
 
     TEST_CONSTEXPR name a("hello", 5, 100, name_kind::type_name);
-    TEST_CONSTEXPR name b("world", 5, 200, name_kind::enum_name);
-    TEST_CONSTEXPR name c("hello", 5, 100, name_kind::enum_value_name);
+    TEST_CONSTEXPR name b("world", 5, 200, name_kind::type_name);
+    TEST_CONSTEXPR name c("hello", 5, 100, name_kind::value_name);
 
     CHECK(!a.empty());
     CHECK(a.kind() == name_kind::type_name);
@@ -34,7 +34,7 @@ int main()
     CHECK(a.hash() == 100);
 
     CHECK(!b.empty());
-    CHECK(b.kind() == name_kind::enum_name);
+    CHECK(b.kind() == name_kind::type_name);
     CHECK(b.size() == 5);
     CHECK(b.hash() == 200);
 

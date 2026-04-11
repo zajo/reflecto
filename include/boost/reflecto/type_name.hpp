@@ -50,7 +50,7 @@ namespace d
     {
         static constexpr t x = q<T>();
         static constexpr name n{x.begin, x.size, hash_sequence(x.begin, x.begin + x.size),
-            std::is_enum_v<T> ? name_kind::enum_name : name_kind::type_name};
+            name_kind::type_name};
     };
 
     template <class T>
@@ -59,7 +59,7 @@ namespace d
         static constexpr t x = q<T>();
         static constexpr d::stripped<x.size> s = strip_space_before_template_closing_bracket<x.size>(x.begin, x.size);
         static constexpr name n{s.buf, s.len, s.hash,
-            std::is_enum_v<T> ? name_kind::enum_name : name_kind::type_name};
+            name_kind::type_name};
     };
 
     template <class T>
@@ -68,7 +68,7 @@ namespace d
         static constexpr t x = q<T>();
         static constexpr d::stripped<x.size> s = strip_keywords_and_space_before_template_closing_bracket<x.size>(x.begin, x.size);
         static constexpr name n{s.buf, s.len, s.hash,
-            std::is_enum_v<T> ? name_kind::enum_name : name_kind::type_name};
+            name_kind::type_name};
     };
 }
 

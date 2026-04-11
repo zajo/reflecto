@@ -76,8 +76,8 @@ bool check_str_rt(char const * a, char const * b, char const * file, int line)
 #define CHECK_RT(expr) check_rt((expr), #expr, __FILE__, __LINE__)
 
 #define CHECK_TYPE_NAME_CONSTEXPR(entity, expected) static_assert(check_name(boost::reflecto::type_name<entity>(), expected))
-#define CHECK_ENUM_VALUE_NAME_CONSTEXPR(entity, expected) static_assert(check_name(boost::reflecto::enum_value_name<entity>(), expected))
-#define CHECK_UNQUALIFIED_ENUM_VALUE_NAME_CONSTEXPR(entity, expected) static_assert(check_name(boost::reflecto::unqualified_enum_value_name<entity>(), expected))
+#define CHECK_VALUE_NAME_CONSTEXPR(entity, expected) static_assert(check_name(boost::reflecto::value_name<entity>(), expected))
+#define CHECK_SHORT_VALUE_NAME_CONSTEXPR(entity, expected) static_assert(check_name(boost::reflecto::short_value_name<entity>(), expected))
 
 #ifdef RUNTIME_TEST
 
@@ -104,15 +104,15 @@ namespace boost::reflecto::d
             (void) boost::reflecto::d::a<entity>(); \
     } while(0)
 
-#define CHECK_ENUM_VALUE_NAME_RT(entity, expected) \
+#define CHECK_VALUE_NAME_RT(entity, expected) \
     do { \
-        if( !check_name_rt(boost::reflecto::enum_value_name<entity>(), expected, __FILE__, __LINE__) ) \
+        if( !check_name_rt(boost::reflecto::value_name<entity>(), expected, __FILE__, __LINE__) ) \
             (void) boost::reflecto::d::b<decltype(entity), entity>(); \
     } while(0)
 
-#define CHECK_UNQUALIFIED_ENUM_VALUE_NAME_RT(entity, expected) \
+#define CHECK_SHORT_VALUE_NAME_RT(entity, expected) \
     do { \
-        if( !check_name_rt(boost::reflecto::unqualified_enum_value_name<entity>(), expected, __FILE__, __LINE__) ) \
+        if( !check_name_rt(boost::reflecto::short_value_name<entity>(), expected, __FILE__, __LINE__) ) \
             (void) boost::reflecto::d::b<decltype(entity), entity>(); \
     } while(0)
 
@@ -121,8 +121,8 @@ namespace boost::reflecto::d
 #   define CHECK_STR CHECK_STR_RT
 #   define CHECK CHECK_RT
 #   define CHECK_TYPE_NAME CHECK_TYPE_NAME_RT
-#   define CHECK_ENUM_VALUE_NAME CHECK_ENUM_VALUE_NAME_RT
-#   define CHECK_UNQUALIFIED_ENUM_VALUE_NAME CHECK_UNQUALIFIED_ENUM_VALUE_NAME_RT
+#   define CHECK_VALUE_NAME CHECK_VALUE_NAME_RT
+#   define CHECK_SHORT_VALUE_NAME CHECK_SHORT_VALUE_NAME_RT
 
 #else
 
@@ -131,8 +131,8 @@ namespace boost::reflecto::d
 #   define CHECK_STR CHECK_STR_CONSTEXPR
 #   define CHECK CHECK_CONSTEXPR
 #   define CHECK_TYPE_NAME CHECK_TYPE_NAME_CONSTEXPR
-#   define CHECK_ENUM_VALUE_NAME CHECK_ENUM_VALUE_NAME_CONSTEXPR
-#   define CHECK_UNQUALIFIED_ENUM_VALUE_NAME CHECK_UNQUALIFIED_ENUM_VALUE_NAME_CONSTEXPR
+#   define CHECK_VALUE_NAME CHECK_VALUE_NAME_CONSTEXPR
+#   define CHECK_SHORT_VALUE_NAME CHECK_SHORT_VALUE_NAME_CONSTEXPR
 
 #endif
 
