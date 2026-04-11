@@ -26,11 +26,11 @@ reflecto = declare_dependency( include_directories: 'include' )
 #################################
 
 tests = [
-    'name_test',
-    'type_name_test',
-    'enum_value_name_test',
-    'enum_introspection_test',
     'meta_specialization_test',
+    'name_test',
+    'named_values_test',
+    'type_name_test',
+    'value_name_test'
 ]
 
 dep_test_single_header = []

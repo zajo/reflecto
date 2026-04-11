@@ -16,11 +16,10 @@ enum class name_kind
 {
     empty,
     type_name,
-    enum_name,
-    enum_value_name,
-    unqualified_enum_value_name,
-    unnamed_enum_value,
-    enum_value_out_of_lookup_range
+    value_name,
+    short_value_name,
+    unnamed_value,
+    value_out_of_lookup_range
 };
 
 ////////////////////////////////////////

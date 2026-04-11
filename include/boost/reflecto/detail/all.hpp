@@ -4,7 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/reflecto/config.hpp>
-#include <boost/reflecto/name.hpp>
-#include <boost/reflecto/enum_value_name.hpp>
 #include <boost/reflecto/meta_specialization.hpp>
+#include <boost/reflecto/name.hpp>
 #include <boost/reflecto/type_name.hpp>
+#include <boost/reflecto/value_name.hpp>
