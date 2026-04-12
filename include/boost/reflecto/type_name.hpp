@@ -43,10 +43,10 @@ namespace d
     }
 
     template <class T, type_processing_requirements>
-    struct type_name_impl;
+    struct type_name_;
 
     template <class T>
-    struct type_name_impl<T, type_processing_requirements::none>
+    struct type_name_<T, type_processing_requirements::none>
     {
         static constexpr t x = q<T>();
         static constexpr name n{x.begin, x.size, hash_sequence(x.begin, x.begin + x.size),
@@ -54,7 +54,7 @@ namespace d
     };
 
     template <class T>
-    struct type_name_impl<T, type_processing_requirements::strip_space_before_template_closing_bracket>
+    struct type_name_<T, type_processing_requirements::strip_space_before_template_closing_bracket>
     {
         static constexpr t x = q<T>();
         static constexpr d::stripped<x.size> s = strip_space_before_template_closing_bracket<x.size>(x.begin, x.size);
@@ -63,7 +63,7 @@ namespace d
     };
 
     template <class T>
-    struct type_name_impl<T, type_processing_requirements::strip_keywords_and_space_before_template_closing_bracket>
+    struct type_name_<T, type_processing_requirements::strip_keywords_and_space_before_template_closing_bracket>
     {
         static constexpr t x = q<T>();
         static constexpr d::stripped<x.size> s = strip_keywords_and_space_before_template_closing_bracket<x.size>(x.begin, x.size);
@@ -75,7 +75,7 @@ namespace d
 template <class T>
 constexpr name const & type_name() noexcept
 {
-    return d::type_name_impl<T, d::pf_traits::type_processing>::n;
+    return d::type_name_<T, d::pf_traits::type_processing>::n;
 }
 
 }

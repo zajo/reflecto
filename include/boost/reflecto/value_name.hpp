@@ -7,7 +7,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/reflecto/config.hpp>
-#include <boost/reflecto/meta_specialization.hpp>
+#include <boost/reflecto/ns_bind.hpp>
 #include <boost/reflecto/name.hpp>
 #include <utility>
 
@@ -18,7 +18,9 @@
 
 namespace boost::reflecto {
 
-// Single letter identifiers are used to minimize bloat.
+template <class Enum>
+using lookup_range = ns_bind<enum_lookup_range<resolve_for<Enum>>>;
+
 namespace d
 {
     constexpr t strip_enum_value_qualification(t x) noexcept
@@ -117,10 +119,10 @@ namespace d
     }
 
     template <auto EnumValue, bool Unqualify, enum_value_processing_requirements>
-    struct value_name_impl;
+    struct value_name_;
 
     template <auto EnumValue>
-    struct value_name_impl<EnumValue, false, enum_value_processing_requirements::none>
+    struct value_name_<EnumValue, false, enum_value_processing_requirements::none>
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
@@ -129,7 +131,7 @@ namespace d
     };
 
     template <auto EnumValue>
-    struct value_name_impl<EnumValue, false, enum_value_processing_requirements::strip_space_before_template_closing_bracket>
+    struct value_name_<EnumValue, false, enum_value_processing_requirements::strip_space_before_template_closing_bracket>
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
@@ -143,7 +145,7 @@ namespace d
     };
 
     template <auto EnumValue>
-    struct value_name_impl<EnumValue, false, enum_value_processing_requirements::strip_type_prefix_and_space_before_template_closing_bracket>
+    struct value_name_<EnumValue, false, enum_value_processing_requirements::strip_type_prefix_and_space_before_template_closing_bracket>
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
@@ -157,7 +159,7 @@ namespace d
     };
 
     template <auto EnumValue>
-    struct value_name_impl<EnumValue, true, enum_value_processing_requirements::none>
+    struct value_name_<EnumValue, true, enum_value_processing_requirements::none>
     {
         using Enum = decltype(EnumValue);
         static constexpr t raw = g<Enum, EnumValue>();
@@ -171,7 +173,7 @@ namespace d
     };
 
     template <auto EnumValue>
-    struct value_name_impl<EnumValue, true, enum_value_processing_requirements::copy_pretty_function_string>
+    struct value_name_<EnumValue, true, enum_value_processing_requirements::copy_pretty_function_string>
     {
         using Enum = decltype(EnumValue);
         static constexpr t x = g<Enum, EnumValue>();
@@ -190,12 +192,13 @@ constexpr name const & value_name() noexcept
 {
     using Enum = decltype(EnumValue);
     static_assert(std::is_enum_v<Enum>);
-    static_assert(static_cast<int>(EnumValue) >= meta_select_t<enum_lookup_range, Enum>::min_value, "enum value is below enum_lookup_range::min_value");
-    static_assert(static_cast<int>(EnumValue) <= meta_select_t<enum_lookup_range, Enum>::max_value, "enum value is above enum_lookup_range::max_value");
+    using r = lookup_range<Enum>;
+    static_assert(static_cast<int>(EnumValue) >= r::min_value, "enum value is below enum_lookup_range::min_value");
+    static_assert(static_cast<int>(EnumValue) <= r::max_value, "enum value is above enum_lookup_range::max_value");
     constexpr auto s = std::is_convertible_v<Enum, int>
         ? d::pf_traits::unscoped_enum_value_processing
         : d::pf_traits::scoped_enum_value_processing;
-    return d::value_name_impl<EnumValue, false, s>::n;
+    return d::value_name_<EnumValue, false, s>::n;
 }
 
 template <auto EnumValue>
@@ -203,9 +206,10 @@ constexpr name const & short_value_name() noexcept
 {
     using Enum = decltype(EnumValue);
     static_assert(std::is_enum_v<Enum>);
-    static_assert(static_cast<int>(EnumValue) >= meta_select_t<enum_lookup_range, Enum>::min_value, "enum value is below enum_lookup_range::min_value");
-    static_assert(static_cast<int>(EnumValue) <= meta_select_t<enum_lookup_range, Enum>::max_value, "enum value is above enum_lookup_range::max_value");
-    return d::value_name_impl<EnumValue, true, d::pf_traits::unqualified_enum_value_processing>::n;
+    using r = lookup_range<Enum>;
+    static_assert(static_cast<int>(EnumValue) >= r::min_value, "enum value is below enum_lookup_range::min_value");
+    static_assert(static_cast<int>(EnumValue) <= r::max_value, "enum value is above enum_lookup_range::max_value");
+    return d::value_name_<EnumValue, true, d::pf_traits::unqualified_enum_value_processing>::n;
 }
 
 ////////////////////////////////////////
@@ -244,13 +248,15 @@ namespace d
     inline constexpr name out_of_lookup_range_name{"*unknown*", 9, 11775755009147575841ull, name_kind::value_out_of_lookup_range};
 
     template <class Enum, bool Unqualify,
-        class = std::make_integer_sequence<int, meta_select_t<enum_lookup_range, Enum>::max_value - meta_select_t<enum_lookup_range, Enum>::min_value + 1>>
+        class = std::make_integer_sequence<int,
+            lookup_range<Enum>::max_value -
+            lookup_range<Enum>::min_value + 1>>
     struct value_lookup_table;
 
     template <class Enum, bool Unqualify, int... Is>
     struct value_lookup_table<Enum, Unqualify, std::integer_sequence<int, Is...>>
     {
-        static constexpr int minv = meta_select_t<enum_lookup_range, Enum>::min_value;
+        static constexpr int minv = lookup_range<Enum>::min_value;
 
         static constexpr auto s = Unqualify
             ? pf_traits::unqualified_enum_value_processing
@@ -258,7 +264,7 @@ namespace d
                 ? pf_traits::unscoped_enum_value_processing
                 : pf_traits::scoped_enum_value_processing;
 
-        static constexpr name const * values[sizeof...(Is)] = { &value_name_impl<enum_cast_sfinae<Enum, minv + Is>::value, Unqualify, s>::n... };
+        static constexpr name const * values[sizeof...(Is)] = { &value_name_<enum_cast_sfinae<Enum, minv + Is>::value, Unqualify, s>::n... };
 
         static constexpr name const & get(Enum value) noexcept
         {
@@ -312,7 +318,14 @@ namespace d
     };
 
     template <class Enum>
-    using named_values_seq = typename collect_named<Enum, meta_select_t<enum_lookup_range, Enum>::min_value, meta_select_t<enum_lookup_range, Enum>::max_value + 1>::type;
+    struct named_values_seq_
+    {
+        using r = lookup_range<Enum>;
+        using type = typename collect_named<Enum, r::min_value, r::max_value + 1>::type;
+    };
+
+    template <class Enum>
+    using named_values_seq = typename named_values_seq_<Enum>::type;
 
     template <class Enum, int I, int Max, bool = is_named_enum_value<Enum, I>::value>
     struct find_first_named
@@ -363,13 +376,15 @@ constexpr int named_value_count() noexcept
 template <class Enum>
 constexpr Enum min_named_value() noexcept
 {
-    return static_cast<Enum>(d::find_first_named<Enum, meta_select_t<enum_lookup_range, Enum>::min_value, meta_select_t<enum_lookup_range, Enum>::max_value + 1>::value);
+    using r = lookup_range<Enum>;
+    return static_cast<Enum>(d::find_first_named<Enum, r::min_value, r::max_value + 1>::value);
 }
 
 template <class Enum>
 constexpr Enum max_named_value() noexcept
 {
-    return static_cast<Enum>(d::find_last_named<Enum, meta_select_t<enum_lookup_range, Enum>::max_value, meta_select_t<enum_lookup_range, Enum>::min_value>::value);
+    using r = lookup_range<Enum>;
+    return static_cast<Enum>(d::find_last_named<Enum, r::max_value, r::min_value>::value);
 }
 
 template <class Enum>

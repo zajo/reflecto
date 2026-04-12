@@ -26,7 +26,11 @@ reflecto = declare_dependency( include_directories: 'include' )
 #################################
 
 tests = [
-    'meta_specialization_test',
+    'ns_bind_ns_walk_test',
+    'ns_bind_unspecialized_test',
+    'ns_bind_multi_arg_test',
+    'ns_bind_two_nsof_test',
+    'ns_bind_currency_test',
     'name_test',
     'named_values_test',
     'type_name_test',

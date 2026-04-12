@@ -28,7 +28,7 @@ enum class range_test_enum { a, b, c };
 
 namespace boost::reflecto {
 template <>
-struct enum_lookup_range<specialize_for_type<range_test_enum>>
+struct enum_lookup_range<range_test_enum>
 {
     static constexpr int min_value = 0;
     static constexpr int max_value = 1;

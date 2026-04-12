@@ -104,12 +104,12 @@ the range (to help detect insufficient ranges, the compile-time `value_name` /
 `short_value_name` force a compile error for values outside the range).
 
 To customize the lookup range for a given enum, specialize `enum_lookup_range`
-(this uses the [meta specialization](#meta-specialization) interface):
+(see [namespace-dependent specialization](#namespace-dependent-specialization)):
 
 ```cpp
 namespace boost::reflecto {
     template <>
-    struct enum_lookup_range<specialize_for_type<color>>
+    struct enum_lookup_range<color>
     {
         static constexpr int min_value = 0;
         static constexpr int max_value = 20;
@@ -187,20 +187,23 @@ static_assert(usorted[1].value_name == "green");
 static_assert(usorted[2].value_name == "red");
 ```
 
-## Meta Specialization
+## Namespace-Dependent Specialization
 
 Reflecto provides a mechanism for specializing class templates not just for a
-specific type, but also for all types in a given namespace. The
-`enum_lookup_range` template uses this system, so it can be specialized for a
-specific enum or for all enums in a given namespace, allowing independent
-libraries to configure their own ranges without clashing.
+specific type, but also for all types within a given namespace.
 
-A class template that supports meta specialization is parameterized by a
-`meta_key`. The default, unspecialized instantiation is required to derive from
-`unspecialized`. For example, `enum_lookup_range` is defined as:
+### Specializing `enum_lookup_range` for different namespaces
+
+The `enum_lookup_range` template can be specialized for a specific enum or for
+all enums in a given namespace, allowing independent libraries to configure
+their own ranges without clashing.
+
+To make a class template compatible with this system, use `unspecialized` as
+the base of the primary template definition. For example, `enum_lookup_range` is
+defined as:
 
 ```cpp
-template <meta_key>
+template <class>
 struct enum_lookup_range: unspecialized
 {
     static constexpr int min_value = -8;
@@ -209,7 +212,7 @@ struct enum_lookup_range: unspecialized
 ```
 
 By convention, to define a specialization for all types from a given namespace,
-use `specialize_for_namespace`:
+use `in_namespace`:
 
 ```cpp
 namespace lib_a
@@ -226,7 +229,7 @@ namespace lib_a
 namespace boost::reflecto
 {
     template <>
-    struct enum_lookup_range<specialize_for_namespace<lib_a::this_namespace>>
+    struct enum_lookup_range<in_namespace<lib_a::this_namespace>>
     {
         static constexpr int min_value = 0;
         static constexpr int max_value = 255;
@@ -251,7 +254,7 @@ namespace lib_b
 namespace boost::reflecto
 {
     template <>
-    struct enum_lookup_range<specialize_for_namespace<lib_b::this_namespace>>
+    struct enum_lookup_range<in_namespace<lib_b::this_namespace>>
     {
         static constexpr int min_value = -100;
         static constexpr int max_value = 100;
@@ -259,20 +262,111 @@ namespace boost::reflecto
 }
 ```
 
-With this in place, `meta_select_t` selects the correct specialization based on
-the namespace of the given type:
+With this in place, use `ns_bind` to select the correct specialization based on
+the namespace of the argument:
 
 ```cpp
-using ra = meta_select_t<enum_lookup_range, lib_a::status>;
+using ra = ns_bind<enum_lookup_range<resolve_for<lib_a::status>>>;
 static_assert(ra::min_value == 0 && ra::max_value == 255);
 
-using rb = meta_select_t<enum_lookup_range, lib_b::mode>;
+using rb = ns_bind<enum_lookup_range<resolve_for<lib_b::mode>>>;
 static_assert(rb::min_value == -100 && rb::max_value == 100);
 ```
 
-Type-specific specializations are also supported using `specialize_for_type` (as
-shown in the `color` example earlier), and take precedence over namespace
-specializations.
+Type-specific specializations are supported as usual (as shown in the `color`
+example earlier), and take precedence over namespace specializations.
+
+### Multiple namespace-dependent arguments
+
+Templates with multiple type parameters can use `resolve_for` in any position.
+Specializations use `in_namespace` for namespace-dependent parameters and
+concrete types for the rest:
+
+```cpp
+namespace americas
+{
+    struct this_namespace;
+
+    struct usd;
+    struct cad;
+}
+
+namespace europe
+{
+    struct this_namespace;
+
+    struct eur;
+    struct gbp;
+}
+
+namespace asia
+{
+    struct this_namespace;
+
+    struct jpy;
+}
+
+template <class From, class To>
+struct conversion_fee: unspecialized
+{
+    static constexpr int basis_points = 100;
+};
+
+template <>
+struct conversion_fee<
+    in_namespace<americas::this_namespace>,
+    in_namespace<europe::this_namespace>>
+{
+    static constexpr int basis_points = 50;
+};
+
+template <>
+struct conversion_fee<
+    americas::usd,
+    in_namespace<europe::this_namespace>>
+{
+    static constexpr int basis_points = 10;
+};
+
+template <class T>
+struct conversion_fee<T, T>
+{
+    static constexpr int basis_points = 0;
+};
+```
+
+When resolving, `ns_bind` processes each `resolve_for` argument independently.
+Type-specific matches take precedence over namespace matches at each position:
+
+```cpp
+// usd has a type-specific match, 10 bps:
+static_assert(ns_bind<
+    conversion_fee<
+        resolve_for<americas::usd>,
+        resolve_for<europe::eur>>
+>::basis_points == 10);
+
+// cad has no type-specific match, falls back to americas namespace, 50 bps:
+static_assert(ns_bind<
+    conversion_fee<
+        resolve_for<americas::cad>,
+        resolve_for<europe::gbp>>
+>::basis_points == 50);
+
+// americas -> asia has no specialization, falls back to the default:
+static_assert(ns_bind<
+    conversion_fee<
+        resolve_for<americas::usd>,
+        resolve_for<asia::jpy>>
+>::basis_points == 100);
+
+// same currency, no conversion fee:
+static_assert(ns_bind<
+    conversion_fee<
+        resolve_for<europe::eur>,
+        resolve_for<europe::eur>>
+>::basis_points == 0);
+```
 
 ## Limitations
 

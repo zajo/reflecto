@@ -35,7 +35,7 @@ namespace boost::reflecto {
 
 struct unspecialized { };
 
-template <std::uint64_t>
+template <class>
 struct enum_lookup_range: unspecialized
 {
     static constexpr int min_value = BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE;

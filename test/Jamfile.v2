@@ -18,14 +18,20 @@ project
 compile-fail _unnamed_ns_type_name_test.cpp ;
 compile-fail _unnamed_ns_value_name_test.cpp ;
 
-compile meta_specialization_test.cpp ;
-compile name_test.cpp ;
+compile ns_bind_ns_walk_test.cpp ;
+compile ns_bind_unspecialized_test.cpp ;
+compile ns_bind_multi_arg_test.cpp ;
+compile ns_bind_two_nsof_test.cpp ;
+compile ns_bind_currency_test.cpp ;compile name_test.cpp ;
 compile named_values_test.cpp ;
 compile type_name_test.cpp ;
 compile value_name_test.cpp ;
 
-run meta_specialization_test.cpp : : : <define>RUNTIME_TEST : rt_meta_specialization_test ;
-run name_test.cpp : : : <define>RUNTIME_TEST : rt_name_test ;
+run ns_bind_ns_walk_test.cpp : : : <define>RUNTIME_TEST : rt_ns_bind_ns_walk_test ;
+run ns_bind_unspecialized_test.cpp : : : <define>RUNTIME_TEST : rt_ns_bind_unspecialized_test ;
+run ns_bind_multi_arg_test.cpp : : : <define>RUNTIME_TEST : rt_ns_bind_multi_arg_test ;
+run ns_bind_two_nsof_test.cpp : : : <define>RUNTIME_TEST : rt_ns_bind_two_nsof_test ;
+run ns_bind_currency_test.cpp : : : <define>RUNTIME_TEST : rt_ns_bind_currency_test ;run name_test.cpp : : : <define>RUNTIME_TEST : rt_name_test ;
 run named_values_test.cpp : : : <define>RUNTIME_TEST : rt_enum_introspection_test ;
 run type_name_test.cpp : : : <define>RUNTIME_TEST : rt_type_name_test ;
 run value_name_test.cpp : : : <define>RUNTIME_TEST : rt_value_name_test ;
