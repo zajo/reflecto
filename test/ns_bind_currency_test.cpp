@@ -20,6 +20,13 @@ namespace americas
 
     struct usd;
     struct cad;
+
+    namespace caribbean
+    {
+        struct this_namespace;
+
+        struct jmd;
+    }
 }
 
 namespace europe
@@ -53,6 +60,14 @@ struct conversion_fee<
 
 template <>
 struct conversion_fee<
+    in_namespace<americas::caribbean::this_namespace>,
+    in_namespace<europe::this_namespace>>
+{
+    static constexpr int basis_points = 25;
+};
+
+template <>
+struct conversion_fee<
     americas::usd,
     in_namespace<europe::this_namespace>>
 {
@@ -76,6 +91,11 @@ int main()
         resolve_for<americas::cad>,
         resolve_for<europe::gbp>>
     >::basis_points == 50));
+
+    CHECK((ns_bind<conversion_fee<
+        resolve_for<americas::caribbean::jmd>,
+        resolve_for<europe::eur>>
+    >::basis_points == 25));
 
     CHECK((ns_bind<conversion_fee<
         resolve_for<americas::usd>,

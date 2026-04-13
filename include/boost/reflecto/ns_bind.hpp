@@ -8,6 +8,7 @@
 
 #include <boost/reflecto/config.hpp>
 #include <boost/reflecto/detail/pretty_function_traits.hpp>
+#include <boost/reflecto/detail/mp11.hpp>
 #include <type_traits>
 
 namespace boost::reflecto {
@@ -23,6 +24,11 @@ struct is_specialization
 
 namespace d
 {
+    using mp11_reflecto::mp_list;
+    using mp11_reflecto::mp_front;
+    using mp11_reflecto::mp_push_front;
+    using mp11_reflecto::mp_product;
+
     template <std::uint64_t>
     struct k {};
 
@@ -42,16 +48,6 @@ namespace d
         constexpr int total = sizeof(BOOST_REFLECTO_PRETTY_FUNCTION) - 1 - pf_traits::suffix_size - b;
         static_assert(total >= 1);
         return { pf + b, find_parent_ns_end(pf + b, total) };
-    }
-
-    template <class T>
-    constexpr t BOOST_REFLECTO_CDECL m()
-    {
-        constexpr char const * pf = BOOST_REFLECTO_PRETTY_FUNCTION;
-        constexpr int b = pf_traits::type_prefix_size_constexpr;
-        constexpr int total = sizeof(BOOST_REFLECTO_PRETTY_FUNCTION) - 1 - pf_traits::suffix_size - b;
-        static_assert(total >= 1);
-        return { pf + b, total };
     }
 
     template <class T>
@@ -79,145 +75,240 @@ namespace d
         static constexpr bool value = (is_rf<Args>::value || ...);
     };
 
-    template <class... Args>
-    struct first_rf;
+    ////////////////////////////////////////
 
-    template <class T, class... Rest>
-    struct first_rf<resolve_for<T>, Rest...>
+    template <class... Levels>
+    struct chain;
+
+    template <class Lv>
+    struct chain<Lv> {};
+
+    template <class Lv, class... Rest>
+    struct chain<Lv, Rest...>: chain<Rest...> {};
+
+    template <class Chain>
+    struct suffixes;
+
+    template <class Lv>
+    struct suffixes<chain<Lv>>
     {
-        using type = T;
+        using type = mp_list<chain<Lv>>;
     };
 
-    template <class Arg, class... Rest>
-    struct first_rf<Arg, Rest...>
+    template <class Lv, class... Rest>
+    struct suffixes<chain<Lv, Rest...>>
     {
-        using type = typename first_rf<Rest...>::type;
-    };
-
-    template <class Inst>
-    struct first_rf_of;
-
-    template <template <class...> class S, class... Args>
-    struct first_rf_of<S<Args...>>
-    {
-        using type = typename first_rf<Args...>::type;
+        using type = mp_push_front<typename suffixes<chain<Rest...>>::type, chain<Lv, Rest...>>;
     };
 
     ////////////////////////////////////////
 
-    template <class... Ts>
-    struct L {};
+    template <class T, int End, class... Levels>
+    struct build_chain_impl
+    {
+        static constexpr char const * begin = n<T>().begin;
+        static constexpr std::uint64_t h = hash_sequence(begin, begin + End);
+        static constexpr int pe = find_parent_ns_end(begin, End);
+        using type = typename build_chain_impl<T, pe, Levels..., k<h>>::type;
+    };
 
-    template <template <class...> class S, class Prefix, class Replacement, class... Suffix>
-    struct subst_rf;
+    template <class T, class... Levels>
+    struct build_chain_impl<T, 0, Levels...>
+    {
+        using type = chain<Levels...>;
+    };
 
-    template <template <class...> class S, class... Prefix, class Replacement>
-    struct subst_rf<S, L<Prefix...>, Replacement>
+    template <class T>
+    struct make_chain
+    {
+        static constexpr auto info = n<T>();
+        using type = typename build_chain_impl<T, info.size, T>::type;
+    };
+
+    ////////////////////////////////////////
+
+    template <class... Args>
+    struct collect_rf_suffixes;
+
+    template <>
+    struct collect_rf_suffixes<>
+    {
+        using type = mp_list<>;
+    };
+
+    template <class T, class... Rest>
+    struct collect_rf_suffixes<resolve_for<T>, Rest...>
+    {
+        using chain_t = typename make_chain<T>::type;
+        using sfx = typename suffixes<chain_t>::type;
+        using type = mp_push_front<typename collect_rf_suffixes<Rest...>::type, sfx>;
+    };
+
+    template <class Arg, class... Rest>
+    struct collect_rf_suffixes<Arg, Rest...>
+    {
+        using type = typename collect_rf_suffixes<Rest...>::type;
+    };
+
+    template <class Inst>
+    struct collect_rf_suffixes_from;
+
+    template <template <class...> class S, class... Args>
+    struct collect_rf_suffixes_from<S<Args...>>
+    {
+        using type = typename collect_rf_suffixes<Args...>::type;
+    };
+
+    template <class... Args>
+    struct collect_full_chains;
+
+    template <>
+    struct collect_full_chains<>
+    {
+        using type = mp_list<>;
+    };
+
+    template <class T, class... Rest>
+    struct collect_full_chains<resolve_for<T>, Rest...>
+    {
+        using chain_t = typename make_chain<T>::type;
+        using type = mp_push_front<typename collect_full_chains<Rest...>::type, chain_t>;
+    };
+
+    template <class Arg, class... Rest>
+    struct collect_full_chains<Arg, Rest...>
+    {
+        using type = typename collect_full_chains<Rest...>::type;
+    };
+
+    template <class Inst>
+    struct collect_full_chains_from;
+
+    template <template <class...> class S, class... Args>
+    struct collect_full_chains_from<S<Args...>>
+    {
+        using type = typename collect_full_chains<Args...>::type;
+    };
+
+    ////////////////////////////////////////
+
+    template <class SuffixLists>
+    struct product_from_list;
+
+    template <class... SLs>
+    struct product_from_list<mp_list<SLs...>>
+    {
+        using type = mp_product<mp_list, SLs...>;
+    };
+
+    ////////////////////////////////////////
+
+    template <template <class...> class S, class Prefix, class Replacements, class... Suffix>
+    struct subst_all_rf;
+
+    template <template <class...> class S, class... Prefix, class... Rs>
+    struct subst_all_rf<S, mp_list<Prefix...>, mp_list<Rs...>>
     {
         using type = S<Prefix...>;
     };
 
-    template <template <class...> class S, class... Prefix, class Replacement, class T, class... Suffix>
-    struct subst_rf<S, L<Prefix...>, Replacement, resolve_for<T>, Suffix...>
+    template <template <class...> class S, class... Prefix, class R, class... Rs, class T, class... Suffix>
+    struct subst_all_rf<S, mp_list<Prefix...>, mp_list<R, Rs...>, resolve_for<T>, Suffix...>
     {
-        using type = S<Prefix..., Replacement, Suffix...>;
+        using type = typename subst_all_rf<S, mp_list<Prefix..., R>, mp_list<Rs...>, Suffix...>::type;
     };
 
-    template <template <class...> class S, class... Prefix, class Replacement, class Arg, class... Suffix>
-    struct subst_rf<S, L<Prefix...>, Replacement, Arg, Suffix...>
+    template <template <class...> class S, class... Prefix, class Replacements, class Arg, class... Suffix>
+    struct subst_all_rf<S, mp_list<Prefix...>, Replacements, Arg, Suffix...>
     {
-        using type = typename subst_rf<S, L<Prefix..., Arg>, Replacement, Suffix...>::type;
+        using type = typename subst_all_rf<S, mp_list<Prefix..., Arg>, Replacements, Suffix...>::type;
     };
 
-    template <class Inst, class Replacement>
-    struct subst_first_rf;
+    template <class Inst, class Replacements>
+    struct apply_subst;
 
-    template <template <class...> class S, class... Args, class Replacement>
-    struct subst_first_rf<S<Args...>, Replacement>
+    template <template <class...> class S, class... Args, class Replacements>
+    struct apply_subst<S<Args...>, Replacements>
     {
-        using type = typename subst_rf<S, L<>, Replacement, Args...>::type;
+        using type = typename subst_all_rf<S, mp_list<>, Replacements, Args...>::type;
+    };
+
+    template <class T>
+    struct strip_rf { using type = T; };
+
+    template <class T>
+    struct strip_rf<resolve_for<T>> { using type = T; };
+
+    template <class Inst>
+    struct default_subst;
+
+    template <template <class...> class S, class... Args>
+    struct default_subst<S<Args...>>
+    {
+        using type = S<typename strip_rf<Args>::type...>;
     };
 
     ////////////////////////////////////////
 
-    template <class Inst, class T, bool TypeOk>
-    struct resolve_rf;
-
-    template <class Inst, bool = has_rf<Inst>::value>
-    struct resolve;
-
-    template <class Inst>
-    struct resolve<Inst, true>
+    template <class Inst, class ChainSuffixTuple, class = void>
+    struct one_overload
     {
-        using T = typename first_rf_of<Inst>::type;
-        using try_type = typename resolve<typename subst_first_rf<Inst, T>::type>::type;
-        static constexpr bool type_ok = is_specialization<try_type>::value;
-        using type = typename resolve_rf<Inst, T, type_ok>::type;
+        struct no_match;
+        static void call(no_match);
     };
 
+    template <class Inst, class... Suffixes>
+    struct one_overload<Inst, mp_list<Suffixes...>,
+        std::enable_if_t<is_specialization<
+            typename apply_subst<Inst, mp_list<mp_front<Suffixes>...>>::type>::value>>
+    {
+        static typename apply_subst<Inst, mp_list<mp_front<Suffixes>...>>::type
+        call(Suffixes...);
+    };
+
+    template <class Inst, class CrossProduct>
+    struct overload_set_impl;
+
+    template <class Inst, class... Tuples>
+    struct overload_set_impl<Inst, mp_list<Tuples...>>: one_overload<Inst, Tuples>...
+    {
+        using one_overload<Inst, Tuples>::call...;
+    };
+
+    template <class Inst, class CrossProduct>
+    struct overload_set: overload_set_impl<Inst, CrossProduct>
+    {
+        using overload_set_impl<Inst, CrossProduct>::call;
+        static typename default_subst<Inst>::type call(...);
+    };
+
+    template <class OverloadSet, class FullChains>
+    struct resolve_call;
+
+    template <class OverloadSet, class... Chains>
+    struct resolve_call<OverloadSet, mp_list<Chains...>>
+    {
+        using type = decltype(OverloadSet::call(Chains{}...));
+    };
+
+    ////////////////////////////////////////
+
+    template <class Inst, bool = has_rf<Inst>::value>
+    struct ns_bind_;
+
     template <class Inst>
-    struct resolve<Inst, false>
+    struct ns_bind_<Inst, false>
     {
         using type = Inst;
     };
 
-    template <class Inst, class T, int End>
-    struct try_ns_level;
-
-    template <class Inst, class T, int End>
-    struct try_ns_level
-    {
-        static constexpr char const * begin = n<T>().begin;
-        static constexpr std::uint64_t nh = hash_sequence(begin, begin + End);
-        using resolved = typename resolve<typename subst_first_rf<Inst, k<nh>>::type>::type;
-        static constexpr bool ok = is_specialization<resolved>::value;
-    };
-
-    template <class Inst, class T, int End, bool Ok>
-    struct ns_walk;
-
-    template <class Inst, class T, int End>
-    struct ns_walk<Inst, T, End, true>
-    {
-        using type = typename try_ns_level<Inst, T, End>::resolved;
-    };
-
-    template <class Inst, class T>
-    struct ns_walk<Inst, T, 0, false>
-    {
-        using type = typename resolve<typename subst_first_rf<Inst, T>::type>::type;
-    };
-
-    template <class Inst, class T, int End>
-    struct ns_walk<Inst, T, End, false>
-    {
-        static constexpr int pe = find_parent_ns_end(n<T>().begin, End);
-        using level = try_ns_level<Inst, T, pe>;
-        static constexpr bool ok = pe > 0 && level::ok;
-        using type = typename ns_walk<Inst, T, pe, ok>::type;
-    };
-
-    template <class Inst, class T>
-    struct resolve_rf<Inst, T, true>
-    {
-        using type = typename resolve<typename subst_first_rf<Inst, T>::type>::type;
-    };
-
-    template <class Inst, class T>
-    struct resolve_rf<Inst, T, false>
-    {
-        static constexpr auto info = n<T>();
-        using level = try_ns_level<Inst, T, info.size>;
-        static constexpr bool ok = info.size > 0 && level::ok;
-        using type = typename ns_walk<Inst, T, info.size, ok>::type;
-    };
-
-    ////////////////////////////////////////
-
     template <class Inst>
-    struct ns_bind_
+    struct ns_bind_<Inst, true>
     {
-        using type = typename resolve<Inst>::type;
+        using suffix_lists = typename collect_rf_suffixes_from<Inst>::type;
+        using cp = typename product_from_list<suffix_lists>::type;
+        using full_chains = typename collect_full_chains_from<Inst>::type;
+        using type = typename resolve_call<overload_set<Inst, cp>, full_chains>::type;
     };
 } // namespace d
 

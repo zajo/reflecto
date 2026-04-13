@@ -370,7 +370,7 @@ namespace d
 template <class Enum>
 constexpr int named_value_count() noexcept
 {
-    return d::named_values_seq<Enum>::size();
+    return int(d::named_values_seq<Enum>::size());
 }
 
 template <class Enum>

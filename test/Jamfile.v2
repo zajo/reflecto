@@ -17,6 +17,7 @@ project
 
 compile-fail _unnamed_ns_type_name_test.cpp ;
 compile-fail _unnamed_ns_value_name_test.cpp ;
+compile-fail _ns_bind_ambiguity_test.cpp ;
 
 compile ns_bind_ns_walk_test.cpp ;
 compile ns_bind_unspecialized_test.cpp ;

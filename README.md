@@ -1,6 +1,6 @@
 # Boost.Reflecto
 
-Type name and enum value name reflection for C++17.
+Compile-time type name and enum value name reflection for C++17.
 
 ## Class `name`
 
@@ -335,8 +335,7 @@ struct conversion_fee<T, T>
 };
 ```
 
-When resolving, `ns_bind` processes each `resolve_for` argument independently.
-Type-specific matches take precedence over namespace matches at each position:
+Use `ns_bind` to select the best matching specialization:
 
 ```cpp
 // usd has a type-specific match, 10 bps:
@@ -367,6 +366,13 @@ static_assert(ns_bind<
         resolve_for<europe::eur>>
 >::basis_points == 0);
 ```
+
+When resolving, `ns_bind` considers all matching specializations and
+selects the best one using the same partial ordering rules as standard
+C++ overload resolution. A type-specific match is more specific than a
+namespace match, and a more nested namespace is more specific than an
+outer one. If the partial ordering is ambiguous, the compiler will
+report an error.
 
 ## Limitations
 
