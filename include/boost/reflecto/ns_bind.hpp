@@ -8,6 +8,7 @@
 
 #include <boost/reflecto/config.hpp>
 #include <boost/reflecto/detail/pretty_function_traits.hpp>
+#include <boost/reflecto/detail/mp11.hpp>
 #include <type_traits>
 
 namespace boost::reflecto {
@@ -23,6 +24,11 @@ struct is_specialization
 
 namespace d
 {
+    using mp11_reflecto::mp_list;
+    using mp11_reflecto::mp_front;
+    using mp11_reflecto::mp_push_front;
+    using mp11_reflecto::mp_product;
+
     template <std::uint64_t>
     struct k {};
 
@@ -71,9 +77,6 @@ namespace d
 
     ////////////////////////////////////////
 
-    template <class... Ts>
-    struct L {};
-
     template <class... Levels>
     struct chain;
 
@@ -81,25 +84,7 @@ namespace d
     struct chain<Lv> {};
 
     template <class Lv, class... Rest>
-    struct chain<Lv, Rest...> : chain<Rest...> {};
-
-    template <class Chain>
-    struct chain_head;
-
-    template <class H, class... Rest>
-    struct chain_head<chain<H, Rest...>>
-    {
-        using type = H;
-    };
-
-    template <class Elem, class List>
-    struct prepend;
-
-    template <class Elem, class... Ls>
-    struct prepend<Elem, L<Ls...>>
-    {
-        using type = L<Elem, Ls...>;
-    };
+    struct chain<Lv, Rest...>: chain<Rest...> {};
 
     template <class Chain>
     struct suffixes;
@@ -107,85 +92,13 @@ namespace d
     template <class Lv>
     struct suffixes<chain<Lv>>
     {
-        using type = L<chain<Lv>>;
+        using type = mp_list<chain<Lv>>;
     };
 
     template <class Lv, class... Rest>
     struct suffixes<chain<Lv, Rest...>>
     {
-        using type = typename prepend<chain<Lv, Rest...>, typename suffixes<chain<Rest...>>::type>::type;
-    };
-
-    template <class Tuple, class Elem>
-    struct append;
-
-    template <class... Ts, class Elem>
-    struct append<L<Ts...>, Elem>
-    {
-        using type = L<Ts..., Elem>;
-    };
-
-    template <class... Lists>
-    struct concat;
-
-    template <>
-    struct concat<>
-    {
-        using type = L<>;
-    };
-
-    template <class List>
-    struct concat<List>
-    {
-        using type = List;
-    };
-
-    template <class... As, class... Bs, class... Rest>
-    struct concat<L<As...>, L<Bs...>, Rest...>
-    {
-        using type = typename concat<L<As..., Bs...>, Rest...>::type;
-    };
-
-    template <class Tuple, class ElemList>
-    struct append_each;
-
-    template <class Tuple, class... Elems>
-    struct append_each<Tuple, L<Elems...>>
-    {
-        using type = L<typename append<Tuple, Elems>::type...>;
-    };
-
-    template <class Acc, class ElemList>
-    struct cross_one;
-
-    template <class... Tuples, class ElemList>
-    struct cross_one<L<Tuples...>, ElemList>
-    {
-        using type = typename concat<typename append_each<Tuples, ElemList>::type...>::type;
-    };
-
-    template <class Acc, class... SuffixLists>
-    struct cross;
-
-    template <class Acc>
-    struct cross<Acc>
-    {
-        using type = Acc;
-    };
-
-    template <class Acc, class NextList, class... Rest>
-    struct cross<Acc, NextList, Rest...>
-    {
-        using type = typename cross<typename cross_one<Acc, NextList>::type, Rest...>::type;
-    };
-
-    template <class Seed, class SuffixLists>
-    struct cross_from_list;
-
-    template <class Seed, class... SLs>
-    struct cross_from_list<Seed, L<SLs...>>
-    {
-        using type = typename cross<Seed, SLs...>::type;
+        using type = mp_push_front<typename suffixes<chain<Rest...>>::type, chain<Lv, Rest...>>;
     };
 
     ////////////////////////////////////////
@@ -220,7 +133,7 @@ namespace d
     template <>
     struct collect_rf_suffixes<>
     {
-        using type = L<>;
+        using type = mp_list<>;
     };
 
     template <class T, class... Rest>
@@ -228,7 +141,7 @@ namespace d
     {
         using chain_t = typename make_chain<T>::type;
         using sfx = typename suffixes<chain_t>::type;
-        using type = typename prepend<sfx, typename collect_rf_suffixes<Rest...>::type>::type;
+        using type = mp_push_front<typename collect_rf_suffixes<Rest...>::type, sfx>;
     };
 
     template <class Arg, class... Rest>
@@ -252,14 +165,14 @@ namespace d
     template <>
     struct collect_full_chains<>
     {
-        using type = L<>;
+        using type = mp_list<>;
     };
 
     template <class T, class... Rest>
     struct collect_full_chains<resolve_for<T>, Rest...>
     {
         using chain_t = typename make_chain<T>::type;
-        using type = typename prepend<chain_t, typename collect_full_chains<Rest...>::type>::type;
+        using type = mp_push_front<typename collect_full_chains<Rest...>::type, chain_t>;
     };
 
     template <class Arg, class... Rest>
@@ -279,25 +192,36 @@ namespace d
 
     ////////////////////////////////////////
 
+    template <class SuffixLists>
+    struct product_from_list;
+
+    template <class... SLs>
+    struct product_from_list<mp_list<SLs...>>
+    {
+        using type = mp_product<mp_list, SLs...>;
+    };
+
+    ////////////////////////////////////////
+
     template <template <class...> class S, class Prefix, class Replacements, class... Suffix>
     struct subst_all_rf;
 
     template <template <class...> class S, class... Prefix, class... Rs>
-    struct subst_all_rf<S, L<Prefix...>, L<Rs...>>
+    struct subst_all_rf<S, mp_list<Prefix...>, mp_list<Rs...>>
     {
         using type = S<Prefix...>;
     };
 
     template <template <class...> class S, class... Prefix, class R, class... Rs, class T, class... Suffix>
-    struct subst_all_rf<S, L<Prefix...>, L<R, Rs...>, resolve_for<T>, Suffix...>
+    struct subst_all_rf<S, mp_list<Prefix...>, mp_list<R, Rs...>, resolve_for<T>, Suffix...>
     {
-        using type = typename subst_all_rf<S, L<Prefix..., R>, L<Rs...>, Suffix...>::type;
+        using type = typename subst_all_rf<S, mp_list<Prefix..., R>, mp_list<Rs...>, Suffix...>::type;
     };
 
     template <template <class...> class S, class... Prefix, class Replacements, class Arg, class... Suffix>
-    struct subst_all_rf<S, L<Prefix...>, Replacements, Arg, Suffix...>
+    struct subst_all_rf<S, mp_list<Prefix...>, Replacements, Arg, Suffix...>
     {
-        using type = typename subst_all_rf<S, L<Prefix..., Arg>, Replacements, Suffix...>::type;
+        using type = typename subst_all_rf<S, mp_list<Prefix..., Arg>, Replacements, Suffix...>::type;
     };
 
     template <class Inst, class Replacements>
@@ -306,7 +230,7 @@ namespace d
     template <template <class...> class S, class... Args, class Replacements>
     struct apply_subst<S<Args...>, Replacements>
     {
-        using type = typename subst_all_rf<S, L<>, Replacements, Args...>::type;
+        using type = typename subst_all_rf<S, mp_list<>, Replacements, Args...>::type;
     };
 
     template <class T>
@@ -334,11 +258,11 @@ namespace d
     };
 
     template <class Inst, class... Suffixes>
-    struct one_overload<Inst, L<Suffixes...>,
+    struct one_overload<Inst, mp_list<Suffixes...>,
         std::enable_if_t<is_specialization<
-            typename apply_subst<Inst, L<typename chain_head<Suffixes>::type...>>::type>::value>>
+            typename apply_subst<Inst, mp_list<mp_front<Suffixes>...>>::type>::value>>
     {
-        static typename apply_subst<Inst, L<typename chain_head<Suffixes>::type...>>::type
+        static typename apply_subst<Inst, mp_list<mp_front<Suffixes>...>>::type
         call(Suffixes...);
     };
 
@@ -346,14 +270,13 @@ namespace d
     struct overload_set_impl;
 
     template <class Inst, class... Tuples>
-    struct overload_set_impl<Inst, L<Tuples...>>
-        : one_overload<Inst, Tuples>...
+    struct overload_set_impl<Inst, mp_list<Tuples...>>: one_overload<Inst, Tuples>...
     {
         using one_overload<Inst, Tuples>::call...;
     };
 
     template <class Inst, class CrossProduct>
-    struct overload_set : overload_set_impl<Inst, CrossProduct>
+    struct overload_set: overload_set_impl<Inst, CrossProduct>
     {
         using overload_set_impl<Inst, CrossProduct>::call;
         static typename default_subst<Inst>::type call(...);
@@ -363,7 +286,7 @@ namespace d
     struct resolve_call;
 
     template <class OverloadSet, class... Chains>
-    struct resolve_call<OverloadSet, L<Chains...>>
+    struct resolve_call<OverloadSet, mp_list<Chains...>>
     {
         using type = decltype(OverloadSet::call(Chains{}...));
     };
@@ -383,7 +306,7 @@ namespace d
     struct ns_bind_<Inst, true>
     {
         using suffix_lists = typename collect_rf_suffixes_from<Inst>::type;
-        using cp = typename cross_from_list<L<L<>>, suffix_lists>::type;
+        using cp = typename product_from_list<suffix_lists>::type;
         using full_chains = typename collect_full_chains_from<Inst>::type;
         using type = typename resolve_call<overload_set<Inst, cp>, full_chains>::type;
     };
