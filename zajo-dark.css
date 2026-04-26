@@ -476,3 +476,9 @@ h5 code{color:#22d3ee; font-size:104%}
 .quoteblock blockquote{font-family:"Istok Web","DejaVu Serif"; font-size:1.0625rem; padding:0.5em}
 .quoteblock .attribution{padding-top:.75ex;margin-top:0;margin-right:0;padding-right:.5ex;text-align:right;background-color:#202020}
 .text-right{margin-top:-1em}
+#toc.toc2{scrollbar-color:#606060 #404040;scrollbar-width:thin}
+#toc.toc2::-webkit-scrollbar{width:10px;height:10px}
+#toc.toc2::-webkit-scrollbar-track{background:#404040}
+#toc.toc2::-webkit-scrollbar-thumb{background:#606060;border-radius:5px}
+#toc.toc2::-webkit-scrollbar-thumb:hover{background:#808080}
+#toc.toc2::-webkit-scrollbar-corner{background:#404040}
