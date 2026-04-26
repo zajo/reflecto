@@ -1,5 +1,5 @@
-#ifndef BOOST_REFLECTO_NS_BIND_HPP_INCLUDED
-#define BOOST_REFLECTO_NS_BIND_HPP_INCLUDED
+#ifndef BOOST_REFLECTO_BIND_INSTANCE_HPP_INCLUDED
+#define BOOST_REFLECTO_BIND_INSTANCE_HPP_INCLUDED
 
 // Copyright 2026 Emil Dotchevski
 
@@ -30,15 +30,10 @@ namespace d
     using mp11_reflecto::mp_product;
 
     template <std::uint64_t>
-    struct k {};
+    struct Within {};
 
-    constexpr int find_parent_ns_end(char const * s, int end) noexcept
-    {
-        for( int i = end; i != 1; --i )
-            if( s[i - 1] == ':' && s[i - 2] == ':' )
-                return i - 2;
-        return 0;
-    }
+    template <std::uint64_t>
+    struct Exact {};
 
     template <class T>
     constexpr t BOOST_REFLECTO_CDECL n()
@@ -54,7 +49,14 @@ namespace d
     constexpr std::uint64_t ns_hash() noexcept
     {
         constexpr auto info = n<T>();
-        static_assert(info.size != 0, "in_namespace cannot be used with the global namespace");
+        return hash_sequence(info.begin, info.begin + info.size);
+    }
+
+    template <class T>
+    constexpr std::uint64_t within_scope_hash() noexcept
+    {
+        constexpr auto info = n<T>();
+        static_assert(info.size != 0, "within_scope_of cannot be used with globally-scoped types");
         return hash_sequence(info.begin, info.begin + info.size);
     }
 
@@ -104,25 +106,40 @@ namespace d
     ////////////////////////////////////////
 
     template <class T, int End, class... Levels>
-    struct build_chain_impl
+    struct walk_chain
     {
         static constexpr char const * begin = n<T>().begin;
         static constexpr std::uint64_t h = hash_sequence(begin, begin + End);
         static constexpr int pe = find_parent_ns_end(begin, End);
-        using type = typename build_chain_impl<T, pe, Levels..., k<h>>::type;
+        using type = typename walk_chain<T, pe, Levels..., Within<h>>::type;
     };
 
     template <class T, class... Levels>
-    struct build_chain_impl<T, 0, Levels...>
+    struct walk_chain<T, 0, Levels...>
     {
         using type = chain<Levels...>;
+    };
+
+    template <class T, int End, class... Levels>
+    struct start_chain
+    {
+        static constexpr char const * begin = n<T>().begin;
+        static constexpr std::uint64_t h = hash_sequence(begin, begin + End);
+        static constexpr int pe = find_parent_ns_end(begin, End);
+        using type = typename walk_chain<T, pe, Levels..., Exact<h>, Within<h>>::type;
+    };
+
+    template <class T, class... Levels>
+    struct start_chain<T, 0, Levels...>
+    {
+        using type = chain<Levels..., Exact<hash_start>>;
     };
 
     template <class T>
     struct make_chain
     {
         static constexpr auto info = n<T>();
-        using type = typename build_chain_impl<T, info.size, T>::type;
+        using type = typename start_chain<T, info.size, T>::type;
     };
 
     ////////////////////////////////////////
@@ -294,16 +311,16 @@ namespace d
     ////////////////////////////////////////
 
     template <class Inst, bool = has_rf<Inst>::value>
-    struct ns_bind_;
+    struct bind_instance_;
 
     template <class Inst>
-    struct ns_bind_<Inst, false>
+    struct bind_instance_<Inst, false>
     {
         using type = Inst;
     };
 
     template <class Inst>
-    struct ns_bind_<Inst, true>
+    struct bind_instance_<Inst, true>
     {
         using suffix_lists = typename collect_rf_suffixes_from<Inst>::type;
         using cp = typename product_from_list<suffix_lists>::type;
@@ -313,11 +330,14 @@ namespace d
 } // namespace d
 
 template <class T>
-using in_namespace = d::k<d::ns_hash<T>()>;
+using within_scope_of = d::Within<d::within_scope_hash<T>()>;
+
+template <class T>
+using exact_scope_of = d::Exact<d::ns_hash<T>()>;
 
 template <class Inst>
-using ns_bind = typename d::ns_bind_<Inst>::type;
+using bind_instance = typename d::bind_instance_<Inst>::type;
 
 } // namespace boost::reflecto
 
-#endif // #ifndef BOOST_REFLECTO_NS_BIND_HPP_INCLUDED
+#endif // #ifndef BOOST_REFLECTO_BIND_INSTANCE_HPP_INCLUDED

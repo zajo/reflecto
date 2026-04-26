@@ -14,34 +14,6 @@ namespace boost::reflecto {
 
 namespace d
 {
-    template <int MaxSize>
-    constexpr stripped<MaxSize> strip_keywords_and_space_before_template_closing_bracket(char const * src, int size) noexcept
-    {
-        stripped<MaxSize> result{};
-        char const * end = src + size;
-        int len = 0;
-        std::uint64_t h = hash_start;
-        while( src != end )
-        {
-            if( end - src >= 7 && src[0] == 's' && src[1] == 't' && src[2] == 'r' && src[3] == 'u' && src[4] == 'c' && src[5] == 't' && src[6] == ' ' )
-                src += 7;
-            else if( end - src >= 6 && src[0] == 'c' && src[1] == 'l' && src[2] == 'a' && src[3] == 's' && src[4] == 's' && src[5] == ' ' )
-                src += 6;
-            else if( end - src >= 5 && src[0] == 'e' && src[1] == 'n' && src[2] == 'u' && src[3] == 'm' && src[4] == ' ' )
-                src += 5;
-            else if( src[0] == ' ' && src != end - 1 && src[1] == '>' )
-                ++src;
-            else
-            {
-                h = hash_step(h, *src);
-                result.buf[len++] = *src++;
-            }
-        }
-        result.len = len;
-        result.hash = h;
-        return result;
-    }
-
     template <class T, type_processing_requirements>
     struct type_name_;
 
@@ -70,7 +42,7 @@ namespace d
         static constexpr name n{s.buf, s.len, s.hash,
             name_kind::type_name};
     };
-}
+} // namespace d
 
 template <class T>
 constexpr name const & type_name() noexcept
@@ -78,6 +50,6 @@ constexpr name const & type_name() noexcept
     return d::type_name_<T, d::pf_traits::type_processing>::n;
 }
 
-}
+} // namespace boost::reflecto
 
 #endif // #ifndef BOOST_REFLECTO_TYPE_NAME_HPP_INCLUDED

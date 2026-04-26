@@ -17,23 +17,31 @@ project
 
 compile-fail _unnamed_ns_type_name_test.cpp ;
 compile-fail _unnamed_ns_value_name_test.cpp ;
-compile-fail _ns_bind_ambiguity_test.cpp ;
+compile-fail _bind_instance_ambiguity_test.cpp ;
 
-compile ns_bind_ns_walk_test.cpp ;
-compile ns_bind_unspecialized_test.cpp ;
-compile ns_bind_multi_arg_test.cpp ;
-compile ns_bind_two_rf_test.cpp ;
-compile ns_bind_currency_test.cpp ;
+compile bind_instance_scope_walk_test.cpp ;
+compile bind_instance_unspecialized_test.cpp ;
+compile bind_instance_multi_arg_test.cpp ;
+compile bind_instance_multi_rf_test.cpp ;
+compile bind_instance_currency_test.cpp ;
+compile bind_instance_exact_scope_of_test.cpp ;
+compile bind_instance_mixed_markers_test.cpp ;
+compile scope_traits_test.cpp ;
+compile scope_name_of_test.cpp ;
 compile name_test.cpp ;
 compile named_values_test.cpp ;
 compile type_name_test.cpp ;
 compile value_name_test.cpp ;
 
-run ns_bind_ns_walk_test.cpp : : : <define>RUNTIME_TEST : rt_ns_bind_ns_walk_test ;
-run ns_bind_unspecialized_test.cpp : : : <define>RUNTIME_TEST : rt_ns_bind_unspecialized_test ;
-run ns_bind_multi_arg_test.cpp : : : <define>RUNTIME_TEST : rt_ns_bind_multi_arg_test ;
-run ns_bind_two_rf_test.cpp : : : <define>RUNTIME_TEST : rt_ns_bind_two_rf_test ;
-run ns_bind_currency_test.cpp : : : <define>RUNTIME_TEST : rt_ns_bind_currency_test ;
+run bind_instance_scope_walk_test.cpp : : : <define>RUNTIME_TEST : rt_bind_instance_scope_walk_test ;
+run bind_instance_unspecialized_test.cpp : : : <define>RUNTIME_TEST : rt_bind_instance_unspecialized_test ;
+run bind_instance_multi_arg_test.cpp : : : <define>RUNTIME_TEST : rt_bind_instance_multi_arg_test ;
+run bind_instance_multi_rf_test.cpp : : : <define>RUNTIME_TEST : rt_bind_instance_multi_rf_test ;
+run bind_instance_currency_test.cpp : : : <define>RUNTIME_TEST : rt_bind_instance_currency_test ;
+run bind_instance_exact_scope_of_test.cpp : : : <define>RUNTIME_TEST : rt_bind_instance_exact_scope_of_test ;
+run bind_instance_mixed_markers_test.cpp : : : <define>RUNTIME_TEST : rt_bind_instance_mixed_markers_test ;
+run scope_traits_test.cpp : : : <define>RUNTIME_TEST : rt_scope_traits_test ;
+run scope_name_of_test.cpp : : : <define>RUNTIME_TEST : rt_scope_name_of_test ;
 run name_test.cpp : : : <define>RUNTIME_TEST : rt_name_test ;
 run named_values_test.cpp : : : <define>RUNTIME_TEST : rt_enum_introspection_test ;
 run type_name_test.cpp : : : <define>RUNTIME_TEST : rt_type_name_test ;

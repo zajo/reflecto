@@ -38,45 +38,45 @@ template <class> struct struct_template2 { };
 
 int main()
 {
-    CHECK_TYPE_NAME(int, "int");
+    CHECK_NAME(type_name<int>(), "int");
 
     ////////////////////////////////////////
 
-    CHECK_TYPE_NAME(test_ns::class_, "test_ns::class_");
-    CHECK_TYPE_NAME(test_ns::struct_, "test_ns::struct_");
-    CHECK_TYPE_NAME(test_ns::enum_, "test_ns::enum_");
-    CHECK_TYPE_NAME(test_ns::class_template1<42>, "test_ns::class_template1<42>");
-    CHECK_TYPE_NAME(test_ns::struct_template1<42>, "test_ns::struct_template1<42>");
-    CHECK_TYPE_NAME(test_ns::class_template2<int>, "test_ns::class_template2<int>");
-    CHECK_TYPE_NAME(test_ns::struct_template2<int>, "test_ns::struct_template2<int>");
-    CHECK_TYPE_NAME(test_ns::class_template2<test_ns::class_>, "test_ns::class_template2<test_ns::class_>");
-    CHECK_TYPE_NAME(test_ns::class_template2<test_ns::struct_>, "test_ns::class_template2<test_ns::struct_>");
-    CHECK_TYPE_NAME(test_ns::class_template2<test_ns::enum_>, "test_ns::class_template2<test_ns::enum_>");
-    CHECK_TYPE_NAME(test_ns::struct_template2<test_ns::class_>, "test_ns::struct_template2<test_ns::class_>");
-    CHECK_TYPE_NAME(test_ns::struct_template2<test_ns::struct_>, "test_ns::struct_template2<test_ns::struct_>");
-    CHECK_TYPE_NAME(test_ns::struct_template2<test_ns::enum_>, "test_ns::struct_template2<test_ns::enum_>");
+    CHECK_NAME(type_name<test_ns::class_>(), "test_ns::class_");
+    CHECK_NAME(type_name<test_ns::struct_>(), "test_ns::struct_");
+    CHECK_NAME(type_name<test_ns::enum_>(), "test_ns::enum_");
+    CHECK_NAME(type_name<test_ns::class_template1<42>>(), "test_ns::class_template1<42>");
+    CHECK_NAME(type_name<test_ns::struct_template1<42>>(), "test_ns::struct_template1<42>");
+    CHECK_NAME(type_name<test_ns::class_template2<int>>(), "test_ns::class_template2<int>");
+    CHECK_NAME(type_name<test_ns::struct_template2<int>>(), "test_ns::struct_template2<int>");
+    CHECK_NAME(type_name<test_ns::class_template2<test_ns::class_>>(), "test_ns::class_template2<test_ns::class_>");
+    CHECK_NAME(type_name<test_ns::class_template2<test_ns::struct_>>(), "test_ns::class_template2<test_ns::struct_>");
+    CHECK_NAME(type_name<test_ns::class_template2<test_ns::enum_>>(), "test_ns::class_template2<test_ns::enum_>");
+    CHECK_NAME(type_name<test_ns::struct_template2<test_ns::class_>>(), "test_ns::struct_template2<test_ns::class_>");
+    CHECK_NAME(type_name<test_ns::struct_template2<test_ns::struct_>>(), "test_ns::struct_template2<test_ns::struct_>");
+    CHECK_NAME(type_name<test_ns::struct_template2<test_ns::enum_>>(), "test_ns::struct_template2<test_ns::enum_>");
 
     ////////////////////////////////////////
 
-    CHECK_TYPE_NAME(class_, "class_");
-    CHECK_TYPE_NAME(struct_, "struct_");
-    CHECK_TYPE_NAME(enum_, "enum_");
-    CHECK_TYPE_NAME(class_template1<42>, "class_template1<42>");
-    CHECK_TYPE_NAME(struct_template1<42>, "struct_template1<42>");
-    CHECK_TYPE_NAME(class_template2<int>, "class_template2<int>");
-    CHECK_TYPE_NAME(struct_template2<int>, "struct_template2<int>");
-    CHECK_TYPE_NAME(class_template2<class_>, "class_template2<class_>");
-    CHECK_TYPE_NAME(class_template2<struct_>, "class_template2<struct_>");
-    CHECK_TYPE_NAME(class_template2<enum_>, "class_template2<enum_>");
-    CHECK_TYPE_NAME(struct_template2<class_>, "struct_template2<class_>");
-    CHECK_TYPE_NAME(struct_template2<struct_>, "struct_template2<struct_>");
-    CHECK_TYPE_NAME(struct_template2<enum_>, "struct_template2<enum_>");
+    CHECK_NAME(type_name<class_>(), "class_");
+    CHECK_NAME(type_name<struct_>(), "struct_");
+    CHECK_NAME(type_name<enum_>(), "enum_");
+    CHECK_NAME(type_name<class_template1<42>>(), "class_template1<42>");
+    CHECK_NAME(type_name<struct_template1<42>>(), "struct_template1<42>");
+    CHECK_NAME(type_name<class_template2<int>>(), "class_template2<int>");
+    CHECK_NAME(type_name<struct_template2<int>>(), "struct_template2<int>");
+    CHECK_NAME(type_name<class_template2<class_>>(), "class_template2<class_>");
+    CHECK_NAME(type_name<class_template2<struct_>>(), "class_template2<struct_>");
+    CHECK_NAME(type_name<class_template2<enum_>>(), "class_template2<enum_>");
+    CHECK_NAME(type_name<struct_template2<class_>>(), "struct_template2<class_>");
+    CHECK_NAME(type_name<struct_template2<struct_>>(), "struct_template2<struct_>");
+    CHECK_NAME(type_name<struct_template2<enum_>>(), "struct_template2<enum_>");
 
     ////////////////////////////////////////
 
-    CHECK_TYPE_NAME(test_ns::class_template2<test_ns::struct_template2<test_ns::class_>>, "test_ns::class_template2<test_ns::struct_template2<test_ns::class_>>");
+    CHECK_NAME(type_name<test_ns::class_template2<test_ns::struct_template2<test_ns::class_>>>(), "test_ns::class_template2<test_ns::struct_template2<test_ns::class_>>");
 
-    CHECK_TYPE_NAME(boost::reflecto::in_namespace_boost_reflecto, "boost::reflecto::in_namespace_boost_reflecto");
+    CHECK_NAME(type_name<boost::reflecto::in_namespace_boost_reflecto>(), "boost::reflecto::in_namespace_boost_reflecto");
 
     ////////////////////////////////////////
 

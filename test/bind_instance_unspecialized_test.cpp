@@ -6,7 +6,7 @@
 #ifdef BOOST_REFLECTO_TEST_SINGLE_HEADER
 #   include "reflecto.hpp"
 #else
-#   include <boost/reflecto/ns_bind.hpp>
+#   include <boost/reflecto/bind_instance.hpp>
 #endif
 
 #include "test_helpers.hpp"
@@ -42,7 +42,7 @@ struct setting: unspecialized
 };
 
 template <>
-struct setting<in_namespace<ns_other::this_namespace>>
+struct setting<within_scope_of<ns_other::this_namespace>>
 {
     static constexpr int value = 99;
 };
@@ -50,9 +50,9 @@ struct setting<in_namespace<ns_other::this_namespace>>
 
 int main()
 {
-    CHECK((ns_bind<setting<resolve_for<global_type>>>::value == -1));
-    CHECK((ns_bind<setting<resolve_for<ns_a::a_type>>>::value == -1));
-    CHECK((ns_bind<setting<resolve_for<ns_other::other_type>>>::value == 99));
+    CHECK((bind_instance<setting<resolve_for<global_type>>>::value == -1));
+    CHECK((bind_instance<setting<resolve_for<ns_a::a_type>>>::value == -1));
+    CHECK((bind_instance<setting<resolve_for<ns_other::other_type>>>::value == 99));
 
     return errcount;
 }

@@ -6,7 +6,7 @@
 #ifdef BOOST_REFLECTO_TEST_SINGLE_HEADER
 #   include "reflecto.hpp"
 #else
-#   include <boost/reflecto/ns_bind.hpp>
+#   include <boost/reflecto/bind_instance.hpp>
 #endif
 
 #include "test_helpers.hpp"
@@ -52,16 +52,16 @@ struct conversion_fee: unspecialized
 
 template <>
 struct conversion_fee<
-    in_namespace<americas::this_namespace>,
-    in_namespace<europe::this_namespace>>
+    within_scope_of<americas::this_namespace>,
+    within_scope_of<europe::this_namespace>>
 {
     static constexpr int basis_points = 50;
 };
 
 template <>
 struct conversion_fee<
-    in_namespace<americas::caribbean::this_namespace>,
-    in_namespace<europe::this_namespace>>
+    within_scope_of<americas::caribbean::this_namespace>,
+    within_scope_of<europe::this_namespace>>
 {
     static constexpr int basis_points = 25;
 };
@@ -69,7 +69,7 @@ struct conversion_fee<
 template <>
 struct conversion_fee<
     americas::usd,
-    in_namespace<europe::this_namespace>>
+    within_scope_of<europe::this_namespace>>
 {
     static constexpr int basis_points = 10;
 };
@@ -82,27 +82,27 @@ struct conversion_fee<T, T>
 
 int main()
 {
-    CHECK((ns_bind<conversion_fee<
+    CHECK((bind_instance<conversion_fee<
         resolve_for<americas::usd>,
         resolve_for<europe::eur>>
     >::basis_points == 10));
 
-    CHECK((ns_bind<conversion_fee<
+    CHECK((bind_instance<conversion_fee<
         resolve_for<americas::cad>,
         resolve_for<europe::gbp>>
     >::basis_points == 50));
 
-    CHECK((ns_bind<conversion_fee<
+    CHECK((bind_instance<conversion_fee<
         resolve_for<americas::caribbean::jmd>,
         resolve_for<europe::eur>>
     >::basis_points == 25));
 
-    CHECK((ns_bind<conversion_fee<
+    CHECK((bind_instance<conversion_fee<
         resolve_for<americas::usd>,
         resolve_for<asia::jpy>>
     >::basis_points == 100));
 
-    CHECK((ns_bind<conversion_fee<
+    CHECK((bind_instance<conversion_fee<
         resolve_for<europe::eur>,
         resolve_for<europe::eur>>
     >::basis_points == 0));

@@ -33,6 +33,7 @@ where `name_kind` is:
 enum class name_kind
 {
     empty,
+    scope_name,
     type_name,
     value_name,
     short_value_name,
@@ -138,7 +139,7 @@ static_assert(max_named_value<color>() == color::blue);
 ### `named_values` / `short_named_values`
 
 Return a `const` reference to a static C array of `enumerator` objects for each
-named enum value, in order of their integer values:
+named enum value, in order of their integer values:3
 
 ```cpp
 auto const & entries = named_values<color>();
@@ -212,7 +213,7 @@ struct enum_lookup_range: unspecialized
 ```
 
 By convention, to define a specialization for all types from a given namespace,
-use `in_namespace`:
+use `scope_of`:
 
 ```cpp
 namespace lib_a
@@ -229,7 +230,7 @@ namespace lib_a
 namespace boost::reflecto
 {
     template <>
-    struct enum_lookup_range<in_namespace<lib_a::this_namespace>>
+    struct enum_lookup_range<scope_of<lib_a::this_namespace>>
     {
         static constexpr int min_value = 0;
         static constexpr int max_value = 255;
@@ -254,7 +255,7 @@ namespace lib_b
 namespace boost::reflecto
 {
     template <>
-    struct enum_lookup_range<in_namespace<lib_b::this_namespace>>
+    struct enum_lookup_range<scope_of<lib_b::this_namespace>>
     {
         static constexpr int min_value = -100;
         static constexpr int max_value = 100;
@@ -262,14 +263,14 @@ namespace boost::reflecto
 }
 ```
 
-With this in place, use `ns_bind` to select the correct specialization based on
-the namespace of the argument:
+With this in place, use `bind_instance` to select the correct specialization
+based on the namespace of the argument:
 
 ```cpp
-using ra = ns_bind<enum_lookup_range<resolve_for<lib_a::status>>>;
+using ra = bind_instance<enum_lookup_range<resolve_for<lib_a::status>>>;
 static_assert(ra::min_value == 0 && ra::max_value == 255);
 
-using rb = ns_bind<enum_lookup_range<resolve_for<lib_b::mode>>>;
+using rb = bind_instance<enum_lookup_range<resolve_for<lib_b::mode>>>;
 static_assert(rb::min_value == -100 && rb::max_value == 100);
 ```
 
@@ -279,8 +280,8 @@ example earlier), and take precedence over namespace specializations.
 ### Multiple namespace-dependent arguments
 
 Templates with multiple type parameters can use `resolve_for` in any position.
-Specializations use `in_namespace` for namespace-dependent parameters and
-concrete types for the rest:
+Specializations use `scope_of` for namespace-dependent parameters and concrete
+types for the rest:
 
 ```cpp
 namespace americas
@@ -314,8 +315,8 @@ struct conversion_fee: unspecialized
 
 template <>
 struct conversion_fee<
-    in_namespace<americas::this_namespace>,
-    in_namespace<europe::this_namespace>>
+    scope_of<americas::this_namespace>,
+    scope_of<europe::this_namespace>>
 {
     static constexpr int basis_points = 50;
 };
@@ -323,7 +324,7 @@ struct conversion_fee<
 template <>
 struct conversion_fee<
     americas::usd,
-    in_namespace<europe::this_namespace>>
+    scope_of<europe::this_namespace>>
 {
     static constexpr int basis_points = 10;
 };
@@ -335,44 +336,43 @@ struct conversion_fee<T, T>
 };
 ```
 
-Use `ns_bind` to select the best matching specialization:
+Use `bind_instance` to select the best matching specialization:
 
 ```cpp
 // usd has a type-specific match, 10 bps:
-static_assert(ns_bind<
+static_assert(bind_instance<
     conversion_fee<
         resolve_for<americas::usd>,
         resolve_for<europe::eur>>
 >::basis_points == 10);
 
 // cad has no type-specific match, falls back to americas namespace, 50 bps:
-static_assert(ns_bind<
+static_assert(bind_instance<
     conversion_fee<
         resolve_for<americas::cad>,
         resolve_for<europe::gbp>>
 >::basis_points == 50);
 
 // americas -> asia has no specialization, falls back to the default:
-static_assert(ns_bind<
+static_assert(bind_instance<
     conversion_fee<
         resolve_for<americas::usd>,
         resolve_for<asia::jpy>>
 >::basis_points == 100);
 
 // same currency, no conversion fee:
-static_assert(ns_bind<
+static_assert(bind_instance<
     conversion_fee<
         resolve_for<europe::eur>,
         resolve_for<europe::eur>>
 >::basis_points == 0);
 ```
 
-When resolving, `ns_bind` considers all matching specializations and
-selects the best one using the same partial ordering rules as standard
-C++ overload resolution. A type-specific match is more specific than a
-namespace match, and a more nested namespace is more specific than an
-outer one. If the partial ordering is ambiguous, the compiler will
-report an error.
+When resolving, `bind_instance` considers all matching specializations and
+selects the best one using the same partial ordering rules as standard C++
+overload resolution. A type-specific match is more specific than a namespace
+match, and a more nested namespace is more specific than an outer one. If the
+partial ordering is ambiguous, the compiler will report an error.
 
 ## Limitations
 

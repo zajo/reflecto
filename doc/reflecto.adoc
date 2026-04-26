@@ -1,0 +1,1534 @@
+:last-update-label!:
+:icons: font
+:prewrap!:
+:docinfo: shared
+:stylesheet: zajo-dark.css
+:source-highlighter: rouge
+
+= ЯEFLECTOpass:[<div style="z-index: 3; bottom:-16px; right:4px; position:fixed"><input width="32" height="32" type="image" alt="Skin" src="./skin.png" onclick="this.blur();switch_style();return false;"/></div>]
+Reflection and scope-based template specialization for {CPP}17 | Emil Dotchevski
+:toc: left
+:toclevels: 3
+:toc-title:
+
+[.text-right]
+https://github.com/zajo/reflecto[GitHub]
+
+[abstract]
+== Abstract
+
+(Boost) Reflecto is a `constexpr` library for {CPP}17. Features:
+
+====
+* Type / enumerator / scope name reflection.
+* Template specialization based on scope (e.g. for any type within a given namespace).
+* Traits for inspecting scope relationships between types.
+* Header-only library, no dependencies.
+====
+
+[grid=none, frame=none]
+|====
+| <<tutorial>> \| <<synopsis>> >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<traits,Traits>>
+|====
+
+[[support]]
+== Support
+
+* https://github.com/zajo/reflecto/issues[Report issues] on GitHub
+
+[[distribution]]
+== Distribution
+
+Reflecto is distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
+
+The source code is hosted on https://github.com/boostorg/reflecto[GitHub].
+
+NOTE: Reflecto is not a Boost library.
+
+[[canonical_format]]
+== Canonical Name Format
+
+Reflecto uses a canonical format for `name` objects which is stable across all supported compilers and platforms. This makes Reflecto names persistent, portable identifiers suitable for logging, serialization and other use cases where a type needs to be recognized across an ABI or storage boundary.
+
+[[tutorial]]
+== Tutorial
+
+[[tutorial-names]]
+=== Names
+
+All reflected strings are returned by reference as <<name>> objects. The `name` class derives from `std::string_view` and adds:
+
+* a <<name_kind,kind()>> accessor describing what kind of name it is (type, scope, enum value, etc.), and
+* a precomputed FNV-1a `hash()` used for equality comparisons.
+
+All `name` operations are {CPP}17 `constexpr`.
+
+'''
+
+[[tutorial-type_name]]
+=== Type Names
+
+`<<type_name>><T>()` returns a reference to a `constexpr` `name` with the fully qualified name of `T`:
+
+[source,c++]
+----
+#include <boost/reflecto/type_name.hpp>
+#include <map>
+#include <vector>
+
+using namespace boost::reflecto;
+
+namespace ns
+{
+    struct point
+    {
+        int x, y;
+    };
+}
+
+static_assert(type_name<int>() == "int");
+static_assert(type_name<ns::point>() == "ns::point");
+static_assert(type_name<std::vector<int>>() == "std::vector<int>");
+static_assert(type_name<std::map<int, std::vector<float>>>() == "std::map<int, std::vector<float>>");
+----
+[.text-right]
+<<type_name>>
+
+NOTE: Type aliases are resolved by the compiler, so the extracted name is that of the underlying type. For example `type_name<std::string>()` may yield `std::__cxx11::basic_string<char>` under libstdc++.
+
+WARNING: `type_name` is not supported for types enclosed in unnamed namespaces.
+
+'''
+
+[[tutorial-value_name]]
+=== Enumerators
+
+All examples in this section use the following definition:
+
+[source,c++]
+----
+#include <boost/reflecto/value_name.hpp>
+
+using namespace boost::reflecto;
+
+namespace graphics
+{
+    enum class color
+    {
+        red,
+        green = 10,
+        blue = 20
+    };
+}
+----
+
+WARNING: Enumerator reflection is not supported for enums enclosed in unnamed namespaces.
+
+==== Value Names
+
+For an enumerator known at compile time, <<value_name>> returns its fully qualified name (including the enum type for scoped enums), while <<short_value_name>> returns just the enumerator identifier:
+
+[source,c++]
+----
+static_assert(value_name<graphics::color::red>() == "graphics::color::red");
+static_assert(short_value_name<graphics::color::red>() == "red");
+----
+[.text-right]
+<<value_name>> | <<short_value_name>>
+
+Both functions also have overloads that take the value as a function argument:
+
+[source,c++]
+----
+graphics::color c = graphics::color::green;
+
+// Run-time, from a variable:
+assert(value_name(c) == "graphics::color::green");
+assert(short_value_name(c) == "green");
+----
+[.text-right]
+<<value_name>> | <<short_value_name>>
+
+For each enum, Reflecto generates a table mapping integer values to enumerator names. The covered interval is defined by the <<enum_lookup_range>> template, which can be specialized per enum or for an entire scope (e.g. all enums in a given namespace). See <<tutorial-scope_bind>>.
+
+The overloads that take the value as a function argument use it as an index into the table. For values outside the range, the returned `name` has `kind() == name_kind::value_out_of_lookup_range`.
+
+The overloads that take the value as a non-type template argument trigger a `static_assert` if the value is outside the range, to help detect inadequate lookup ranges.
+
+'''
+
+==== Named Values
+
+For a given enum type, the following `constexpr` functions extract only the named values within the <<enum_lookup_range>>:
+
+[source,c++]
+----
+static_assert(named_value_count<graphics::color>() == 3);
+static_assert(min_named_value<graphics::color>() == graphics::color::red);
+static_assert(max_named_value<graphics::color>() == graphics::color::blue);
+----
+[.text-right]
+<<named_value_count>> | <<min_named_value>> | <<max_named_value>>
+
+The named values (within the <<enum_lookup_range>>) can be extracted using <<named_values>> / <<short_named_values>>, which return a reference to a `constexpr` array of <<enumerator>> objects, sorted by integer value:
+
+[source,c++]
+----
+auto const & entries = named_values<graphics::color>();
+
+static_assert(entries[0].value_name == "graphics::color::red");
+static_assert(entries[0].value == 0);
+static_assert(entries[1].value_name == "graphics::color::green");
+static_assert(entries[1].value == 10);
+static_assert(entries[2].value_name == "graphics::color::blue");
+static_assert(entries[2].value == 20);
+----
+[.text-right]
+<<named_values>> | <<enumerator>>
+
+The array can be iterated:
+
+[source,c++]
+----
+for(auto const & e : named_values<graphics::color>())
+    std::cout << e.value_name << " = " << e.value << "\n";
+----
+[.text-right]
+<<named_values>>
+
+<<sorted_named_values>> / <<sorted_short_named_values>> return the same enumerators sorted lexicographically by name.
+
+'''
+
+[[tutorial-scope_name_of]]
+=== Scopes
+
+==== Scope Names
+
+`<<scope_name_of>><T>()` returns the name of the enclosing scope (namespace or class) of a type:
+
+[source,c++]
+----
+#include <boost/reflecto/scope_name_of.hpp>
+
+using namespace boost::reflecto;
+
+namespace net
+{
+    namespace http
+    {
+        struct request;
+    }
+}
+
+static_assert(scope_name_of<net::http::request>() == "net::http");
+static_assert(scope_name_of<net::http::request>().kind() == name_kind::scope_name);
+----
+[.text-right]
+<<scope_name_of>> | <<name_kind>>
+
+For a type at global scope, the returned `name` is empty:
+
+[source,c++]
+----
+struct widget;
+
+static_assert(scope_name_of<widget>().empty());
+static_assert(scope_name_of<widget>().kind() == name_kind::empty);
+----
+[.text-right]
+<<scope_name_of>> | <<name_kind>>
+
+==== Scope Traits
+
+Reflecto provides two traits for testing scope relationships between two types: `<<same_scope>><T, U>` tests whether `T` and `U` share the same enclosing scope, and `<<in_scope_of>><T, U>` tests whether `T` is directly or transitively enclosed in `U`{empty}'s enclosing scope. Both derive from `std::true_type` / `std::false_type` and come with the corresponding `_v` variable templates:
+
+[source,c++]
+----
+namespace lib
+{
+    struct a;
+    struct b;
+
+    namespace nested
+    {
+        struct c;
+        struct d;
+    }
+}
+
+static_assert(same_scope_v<lib::a, lib::b>);
+static_assert(!same_scope_v<lib::a, lib::nested::c>);
+
+static_assert(in_scope_of_v<lib::a, lib::b>);
+static_assert(in_scope_of_v<lib::nested::c, lib::a>);
+static_assert(!in_scope_of_v<lib::a, lib::nested::c>);
+----
+[.text-right]
+<<same_scope>> | <<in_scope_of>>
+
+'''
+
+[[tutorial-scope_bind]]
+=== Scope-Based Specializations
+
+Reflecto provides a mechanism for specializing class templates not just for a specific type, but for all types within a given scope. For example, a library may provide a customization point in the form of a class template and use Reflecto to support specializing the template for all types in the library namespace.
+
+==== Single Argument
+
+An example use of the scope-based specialization system is Reflecto's own <<enum_lookup_range>> class template (see <<tutorial-value_name>>), defined as:
+
+[source,c++]
+----
+namespace boost::reflecto
+{
+    template <class>
+    struct enum_lookup_range: unspecialized
+    {
+        static constexpr int min_value = BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE;
+        static constexpr int max_value = BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE;
+    };
+}
+----
+[.text-right]
+<<enum_lookup_range>> | <<unspecialized>>
+
+By convention, the primary template derives from <<unspecialized>>, which lets Reflecto detect whether a given template instance is a specialization. If this is impractical, specialize the <<is_specialization>> template instead (it defaults to `!std::is_base_of_v<unspecialized, T>`).
+
+Now `enum_lookup_range` can be specialized for all enums in a given namespace. We declare a `this_namespace` tag type to identify the namespace:
+
+[source,c++]
+----
+namespace lib_a
+{
+    struct this_namespace;
+
+    enum class status
+    {
+        ok,
+        fail
+    };
+}
+
+namespace boost::reflecto
+{
+    template <>
+    struct enum_lookup_range<within_scope_of<lib_a::this_namespace>>
+    {
+        static constexpr int min_value = 0;
+        static constexpr int max_value = 255;
+    };
+}
+----
+[.text-right]
+<<enum_lookup_range>> | <<within_scope_of>>
+
+A different library can do the same without clashing:
+
+[source,c++]
+----
+namespace lib_b
+{
+    struct this_namespace;
+
+    enum class mode
+    {
+        fast,
+        slow
+    };
+}
+
+namespace boost::reflecto
+{
+    template <>
+    struct enum_lookup_range<within_scope_of<lib_b::this_namespace>>
+    {
+        static constexpr int min_value = -100;
+        static constexpr int max_value = 100;
+    };
+}
+----
+[.text-right]
+<<enum_lookup_range>> | <<within_scope_of>>
+
+With these specializations in place, use <<bind_instance>> together with <<resolve_for>> to select the correct specialization for a given argument:
+
+[source,c++]
+----
+using ra = bind_instance<enum_lookup_range<resolve_for<lib_a::status>>>;
+static_assert(ra::min_value == 0 && ra::max_value == 255);
+
+using rb = bind_instance<enum_lookup_range<resolve_for<lib_b::mode>>>;
+static_assert(rb::min_value == -100 && rb::max_value == 100);
+----
+[.text-right]
+<<bind_instance>> | <<enum_lookup_range>> | <<resolve_for>>
+
+Type-specific specializations (as in the `color` example from <<tutorial-value_name>>) are supported and take precedence over scope-based specializations.
+
+==== Exact scope vs. any enclosing scope
+
+Two scope markers are provided:
+
+[cols="1,3"]
+|====
+| `<<exact_scope_of>><T>`  | matches types whose enclosing scope is exactly the scope of `T`.
+| `<<within_scope_of>><T>` | matches types whose enclosing scope is the scope of `T` or any scope nested within it.
+|====
+
+Exact-scope specializations are more specific than within-scope specializations; the compiler's standard partial-ordering rules apply.
+
+[source,c++]
+----
+namespace lib
+{
+    struct this_namespace;
+    struct widget;
+
+    namespace detail
+    {
+        struct this_namespace;
+        struct widget;
+    }
+}
+
+template <class T>
+struct tag: unspecialized
+{
+    static constexpr int id = 0;
+};
+
+template <>
+struct tag<exact_scope_of<lib::this_namespace>>
+{
+    static constexpr int id = 1;
+};
+
+template <>
+struct tag<within_scope_of<lib::this_namespace>>
+{
+    static constexpr int id = 2;
+};
+
+static_assert(bind_instance<tag<resolve_for<lib::widget>>>::id == 1); // exact
+static_assert(bind_instance<tag<resolve_for<lib::detail::widget>>>::id == 2); // within
+----
+[.text-right]
+<<unspecialized>> | <<exact_scope_of>> | <<within_scope_of>> | <<bind_instance>> | <<resolve_for>>
+
+WARNING: `within_scope_of<T>` cannot be used with globally-scoped types -- a type at global scope matches every scope, defeating the purpose of the marker. This is enforced with a `static_assert`.
+
+==== Multiple arguments
+
+Class templates with several type parameters can mark each parameter for scope-based resolution independently. Here is an example specializing currency conversion fees:
+
+[source,c++]
+----
+namespace americas
+{
+    struct this_namespace;
+
+    struct usd;
+    struct cad;
+
+    namespace caribbean
+    {
+        struct this_namespace;
+
+        struct jmd;
+    }
+}
+
+namespace europe
+{
+    struct this_namespace;
+
+    struct eur;
+    struct gbp;
+}
+
+namespace asia
+{
+    struct this_namespace;
+
+    struct jpy;
+}
+
+template <class From, class To>
+struct conversion_fee: unspecialized
+{
+    static constexpr int basis_points = 100;
+};
+
+template <>
+struct conversion_fee<
+    within_scope_of<americas::this_namespace>,
+    within_scope_of<europe::this_namespace>>
+{
+    static constexpr int basis_points = 50;
+};
+
+template <>
+struct conversion_fee<
+    within_scope_of<americas::caribbean::this_namespace>,
+    within_scope_of<europe::this_namespace>>
+{
+    static constexpr int basis_points = 25;
+};
+
+template <>
+struct conversion_fee<
+    americas::usd,
+    within_scope_of<europe::this_namespace>>
+{
+    static constexpr int basis_points = 10;
+};
+
+template <class T>
+struct conversion_fee<T, T>
+{
+    static constexpr int basis_points = 0;
+};
+----
+[.text-right]
+<<unspecialized>> | <<within_scope_of>>
+
+<<bind_instance>> picks the best match across all arguments:
+
+[source,c++]
+----
+static_assert(bind_instance<conversion_fee<
+    resolve_for<americas::usd>,
+    resolve_for<europe::eur>>
+>::basis_points == 10);
+
+static_assert(bind_instance<conversion_fee<
+    resolve_for<americas::cad>,
+    resolve_for<europe::gbp>>
+>::basis_points == 50);
+
+static_assert(bind_instance<conversion_fee<
+    resolve_for<americas::caribbean::jmd>,
+    resolve_for<europe::eur>>
+>::basis_points == 25);
+
+static_assert(bind_instance<conversion_fee<
+    resolve_for<americas::usd>,
+    resolve_for<asia::jpy>>
+>::basis_points == 100);
+
+static_assert(bind_instance<conversion_fee<
+    resolve_for<europe::eur>,
+    resolve_for<europe::eur>>
+>::basis_points == 0);
+----
+[.text-right]
+<<bind_instance>> | <<resolve_for>>
+
+When resolving, `bind_instance` considers all matching specializations and selects the best one using partial-ordering rules similar to standard {CPP} overload resolution:
+
+* a type-specific match is more specific than an `exact_scope_of` match;
+* an `exact_scope_of` match is more specific than a `within_scope_of` match;
+* a more deeply nested `within_scope_of` match is more specific than an outer one.
+
+If the partial ordering is ambiguous, we get a compile error. Suppose we add another specialization to the `conversion_fee` example above:
+
+[source,c++]
+----
+template <>
+struct conversion_fee<
+    within_scope_of<americas::this_namespace>,
+    europe::eur>
+{
+    static constexpr int basis_points = 5;
+};
+----
+[.text-right]
+<<within_scope_of>>
+
+Now resolving `conversion_fee<resolve_for<americas::usd>, resolve_for<europe::eur>>` is ambiguous:
+
+* the existing `conversion_fee<americas::usd, within_scope_of<europe::this_namespace>>` is more specific in the first argument (exact type vs within-scope) but less specific in the second;
+* the new `conversion_fee<within_scope_of<americas::this_namespace>, europe::eur>` is more specific in the second argument but less specific in the first.
+
+The partial ordering is ambiguous, so `bind_instance` produces a compile error.
+
+[[synopsis]]
+== Synopsis
+
+[[config.hpp]]
+=== `config.hpp`
+
+====
+.#include <boost/reflecto/config.hpp>
+[source,c++]
+----
+#ifndef BOOST_REFLECTO_ASSERT
+#   include <cassert>
+#   define BOOST_REFLECTO_ASSERT assert
+#endif
+
+#ifndef BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE
+#   define BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE -8
+#endif
+
+#ifndef BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE
+#   define BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE 63
+#endif
+
+namespace boost::reflecto
+{
+  struct unspecialized { };
+
+  template <class>
+  struct enum_lookup_range: unspecialized
+  {
+      static constexpr int min_value = BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE;
+      static constexpr int max_value = BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE;
+  };
+}
+----
+
+[.text-right]
+Reference: <<unspecialized>> | <<enum_lookup_range>> | <<configuration>>
+====
+
+[[name.hpp]]
+=== `name.hpp`
+
+====
+.#include <boost/reflecto/name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  enum class name_kind
+  {
+      empty,
+      scope_name,
+      type_name,
+      value_name,
+      short_value_name,
+      unnamed_value,
+      value_out_of_lookup_range
+  };
+
+  class name: public std::string_view
+  {
+  public:
+
+      constexpr name() noexcept;
+      explicit name(name const &) = default;
+
+      constexpr name_kind kind() const noexcept;
+      constexpr std::uint64_t hash() const noexcept;
+
+      friend constexpr bool operator==(name const &, name const &) noexcept;
+      friend constexpr bool operator!=(name const &, name const &) noexcept;
+  };
+}
+----
+
+[.text-right]
+Reference: <<name_kind>> | <<name>>
+====
+
+[[type_name.hpp]]
+=== `type_name.hpp`
+
+====
+.#include <boost/reflecto/type_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class T>
+  constexpr name const & type_name() noexcept;
+}
+----
+
+[.text-right]
+Reference: <<type_name>>
+====
+
+[[scope_name_of.hpp]]
+=== `scope_name_of.hpp`
+
+====
+.#include <boost/reflecto/scope_name_of.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class T>
+  constexpr name const & scope_name_of() noexcept;
+}
+----
+
+[.text-right]
+Reference: <<scope_name_of>>
+====
+
+[[scope_traits.hpp]]
+=== `scope_traits.hpp`
+
+====
+.#include <boost/reflecto/scope_traits.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class T, class U>
+  struct same_scope: std::bool_constant<<<unspecified>>>
+  {
+  };
+
+  template <class T, class U>
+  inline constexpr bool same_scope_v = same_scope<T, U>::value;
+
+  template <class T, class U>
+  struct in_scope_of: std::bool_constant<<<unspecified>>>
+  {
+  };
+
+  template <class T, class U>
+  inline constexpr bool in_scope_of_v = in_scope_of<T, U>::value;
+}
+----
+
+[.text-right]
+Reference: <<same_scope>> | <<in_scope_of>>
+====
+
+[[value_name.hpp]]
+=== `value_name.hpp`
+
+====
+.#include <boost/reflecto/value_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class Enum>
+  using lookup_range = bind_instance<enum_lookup_range<resolve_for<Enum>>>;
+
+  struct enumerator
+  {
+      name const & value_name;
+      int value;
+  };
+
+  template <auto EnumValue>
+  constexpr name const & value_name() noexcept;
+
+  template <auto EnumValue>
+  constexpr name const & short_value_name() noexcept;
+
+  template <class Enum>
+  constexpr name const & value_name(Enum value) noexcept;
+
+  template <class Enum>
+  constexpr name const & short_value_name(Enum value) noexcept;
+
+  template <class Enum>
+  constexpr int named_value_count() noexcept;
+
+  template <class Enum>
+  constexpr Enum min_named_value() noexcept;
+
+  template <class Enum>
+  constexpr Enum max_named_value() noexcept;
+
+  template <class Enum>
+  constexpr enumerator const (&named_values() noexcept)[named_value_count<Enum>()];
+
+  template <class Enum>
+  constexpr enumerator const (&short_named_values() noexcept)[named_value_count<Enum>()];
+
+  template <class Enum>
+  constexpr enumerator const (&sorted_named_values() noexcept)[named_value_count<Enum>()];
+
+  template <class Enum>
+  constexpr enumerator const (&sorted_short_named_values() noexcept)[named_value_count<Enum>()];
+}
+----
+
+[.text-right]
+Reference: <<lookup_range>> | <<enumerator>> | <<value_name>> | <<short_value_name>> | <<named_value_count>> | <<min_named_value>> | <<max_named_value>> | <<named_values>> | <<short_named_values>> | <<sorted_named_values>> | <<sorted_short_named_values>>
+====
+
+[[bind_instance.hpp]]
+=== `bind_instance.hpp`
+
+====
+.#include <boost/reflecto/bind_instance.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class>
+  struct resolve_for { };
+
+  template <class T>
+  struct is_specialization
+  {
+      static constexpr bool value = !std::is_base_of_v<unspecialized, T>;
+  };
+
+  template <class T>
+  using exact_scope_of  = <<unspecified>>;
+
+  template <class T>
+  using within_scope_of = <<unspecified>>;
+
+  template <class Inst>
+  using bind_instance = <<unspecified>>;
+}
+----
+
+[.text-right]
+Reference: <<resolve_for>> | <<is_specialization>> | <<exact_scope_of>> | <<within_scope_of>> | <<bind_instance>>
+====
+
+[[functions]]
+== Reference: Functions
+
+TIP: The contents of each Reference section are organized alphabetically.
+
+[[max_named_value]]
+=== `max_named_value`
+
+.#include <boost/reflecto/value_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class Enum>
+  constexpr Enum max_named_value() noexcept;
+}
+----
+
+Returns:: The largest value among the named enumerators of `Enum` within the effective `<<lookup_range>><Enum>`.
+
+'''
+
+[[min_named_value]]
+=== `min_named_value`
+
+.#include <boost/reflecto/value_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class Enum>
+  constexpr Enum min_named_value() noexcept;
+}
+----
+
+Returns:: The smallest value among the named enumerators of `Enum` within the effective `<<lookup_range>><Enum>`.
+
+'''
+
+[[named_value_count]]
+=== `named_value_count`
+
+.#include <boost/reflecto/value_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class Enum>
+  constexpr int named_value_count() noexcept;
+}
+----
+
+Returns:: The number of named enumerators of `Enum` found within the effective <<lookup_range>>.
+
+.Example:
+[source,c++]
+----
+enum class color
+{
+    red,
+    green = 10,
+    blue = 20
+};
+
+static_assert(named_value_count<color>() == 3);
+----
+
+'''
+
+[[named_values]]
+=== `named_values`
+
+.#include <boost/reflecto/value_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class Enum>
+  constexpr enumerator const (&named_values() noexcept)[named_value_count<Enum>()];
+}
+----
+[.text-right]
+<<enumerator>> | <<named_value_count>>
+
+Returns:: A reference to a `constexpr` array of <<enumerator>> objects, one per named value of `Enum` within the effective <<lookup_range>>, ordered by increasing integer value. Each element's `value_name` is the fully qualified name (e.g. `"color::red"`).
+
+.Example:
+[source,c++]
+----
+for(auto const & e : named_values<color>())
+    std::cout << e.value_name << " = " << e.value << "\n";
+----
+
+'''
+
+[[scope_name_of]]
+=== `scope_name_of`
+
+.#include <boost/reflecto/scope_name_of.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class T>
+  constexpr name const & scope_name_of() noexcept;
+}
+----
+[.text-right]
+<<name>>
+
+Returns:: A reference to a `constexpr` <<name>> object containing the fully qualified name of the enclosing scope of `T`. If `T` is at global scope, the returned `name` is empty and its `kind()` is `name_kind::empty`; otherwise its `kind()` is `name_kind::scope_name`.
+
+.Example:
+[source,c++]
+----
+namespace lib
+{
+    namespace util
+    {
+        struct engine;
+    }
+}
+
+static_assert(scope_name_of<lib::util::engine>() == "lib::util");
+----
+
+'''
+
+[[short_named_values]]
+=== `short_named_values`
+
+.#include <boost/reflecto/value_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class Enum>
+  constexpr enumerator const (&short_named_values() noexcept)[named_value_count<Enum>()];
+}
+----
+[.text-right]
+<<enumerator>> | <<named_value_count>>
+
+Returns:: Like <<named_values>>, but for the unqualified enumerator names (e.g. `"red"` instead of `"color::red"`).
+
+'''
+
+[[short_value_name]]
+=== `short_value_name`
+
+.#include <boost/reflecto/value_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <auto EnumValue>
+  constexpr name const & short_value_name() noexcept;
+
+  template <class Enum>
+  constexpr name const & short_value_name(Enum value) noexcept;
+}
+----
+[.text-right]
+<<name>>
+
+The first overload takes the value as a non-type template argument; the second looks up `value` in a precomputed table for the effective <<enum_lookup_range>>.
+
+Returns:: A reference to a <<name>> containing the unqualified name of the given enumerator (e.g. `"red"`). For the second overload, if `(int)value` falls outside the effective <<enum_lookup_range>>, the returned <<name>> has `kind() == name_kind::value_out_of_lookup_range`.
+
+NOTE: If `(int)EnumValue` falls outside the effective <<enum_lookup_range>>, the first overload triggers a `static_assert` to help detect inadequate lookup ranges.
+
+'''
+
+[[sorted_named_values]]
+=== `sorted_named_values`
+
+.#include <boost/reflecto/value_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class Enum>
+  constexpr enumerator const (&sorted_named_values() noexcept)[named_value_count<Enum>()];
+}
+----
+[.text-right]
+<<enumerator>> | <<named_value_count>>
+
+Returns:: Like <<named_values>>, but the entries are sorted lexicographically by `value_name`.
+
+'''
+
+[[sorted_short_named_values]]
+=== `sorted_short_named_values`
+
+.#include <boost/reflecto/value_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class Enum>
+  constexpr enumerator const (&sorted_short_named_values() noexcept)[named_value_count<Enum>()];
+}
+----
+[.text-right]
+<<enumerator>> | <<named_value_count>>
+
+Returns:: Like <<short_named_values>>, but the elements are sorted lexicographically by `value_name`.
+
+'''
+
+[[type_name]]
+=== `type_name`
+
+.#include <boost/reflecto/type_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class T>
+  constexpr name const & type_name() noexcept;
+}
+----
+[.text-right]
+<<name>>
+
+Returns:: A reference to a `constexpr` <<name>> containing the fully qualified name of `T`, with `kind() == name_kind::type_name`.
+
+.Example:
+[source,c++]
+----
+static_assert(type_name<int>() == "int");
+static_assert(type_name<std::vector<int>>() == "std::vector<int>");
+----
+
+WARNING: Not supported for types enclosed in unnamed namespaces.
+
+NOTE: Type aliases are resolved by the compiler; the extracted name is that of the underlying type.
+
+'''
+
+[[value_name]]
+=== `value_name`
+
+.#include <boost/reflecto/value_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <auto EnumValue>
+  constexpr name const & value_name() noexcept;
+
+  template <class Enum>
+  constexpr name const & value_name(Enum value) noexcept;
+}
+----
+[.text-right]
+<<name>>
+
+Same as <<short_value_name>>, but returns the fully qualified name of the given enumerator (e.g. `"color::red"`).
+
+[[types]]
+== Reference: Types
+
+[[bind_instance]]
+=== `bind_instance`
+
+.#include <boost/reflecto/bind_instance.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class Inst>
+  using bind_instance = <<unspecified>>;
+}
+----
+
+Given an instantiation `Inst` of the form `S<A1, A2, ..., An>`, where zero or more of the `Ai` are of the form `<<resolve_for>><T~i~>`, `bind_instance<Inst>` names the specialization of `S` selected by the following process:
+
+. For each `resolve_for<T~i~>` argument, the enclosing scopes of `T~i~` are collected, from innermost to outermost (plus the type `T~i~` itself at the innermost position). Each scope contributes two match tokens: an `exact_scope_of` token and a `within_scope_of` token; `T~i~` itself contributes a type-match token.
+. All combinations of these tokens across all `resolve_for` positions are considered as candidate specializations of `S`.
+. The {CPP} partial-ordering rules are applied across the candidates; the most specific one for which <<is_specialization>> is `true` is selected.
+. If no candidate is a specialization, the primary template is used.
+
+If the partial ordering is ambiguous, the compiler reports an error.
+
+.Example: scope-based specialization
+[source,c++]
+----
+namespace lib
+{
+    struct this_namespace;
+
+    struct widget;
+}
+
+template <class T>
+struct tag: unspecialized
+{
+    static constexpr int id = 0;
+};
+
+template <>
+struct tag<within_scope_of<lib::this_namespace>>
+{
+    static constexpr int id = 1;
+};
+
+static_assert(bind_instance<tag<resolve_for<lib::widget>>>::id == 1);
+----
+
+.Example: type-specific specialization takes precedence over a scope match
+[source,c++]
+----
+namespace lib
+{
+    struct this_namespace;
+
+    struct widget;
+    struct gadget;
+}
+
+template <class T>
+struct tag: unspecialized
+{
+    static constexpr int id = 0;
+};
+
+template <>
+struct tag<within_scope_of<lib::this_namespace>>
+{
+    static constexpr int id = 1;
+};
+
+template <>
+struct tag<lib::widget>
+{
+    static constexpr int id = 2;
+};
+
+static_assert(bind_instance<tag<resolve_for<lib::widget>>>::id == 2);
+static_assert(bind_instance<tag<resolve_for<lib::gadget>>>::id == 1);
+----
+
+.Example: ambiguous resolution
+[source,c++]
+----
+namespace lib_a
+{
+    struct this_namespace;
+
+    struct x;
+}
+
+namespace lib_b
+{
+    struct this_namespace;
+
+    struct y;
+}
+
+template <class T, class U>
+struct tag: unspecialized
+{
+    static constexpr int bps = 0;
+};
+
+template <class U>
+struct tag<within_scope_of<lib_a::this_namespace>, U>
+{
+    static constexpr int bps = 10;
+};
+
+template <class T>
+struct tag<T, within_scope_of<lib_b::this_namespace>>
+{
+    static constexpr int bps = 20;
+};
+
+// Both partial specializations match but neither is more specific
+// than the other -- the compiler reports the ambiguity.
+----
+
+'''
+
+[[enumerator]]
+=== `enumerator`
+
+.#include <boost/reflecto/value_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  struct enumerator
+  {
+      name const & value_name;
+      int value;
+  };
+}
+----
+[.text-right]
+<<name>>
+
+The type of the elements of the array returned by <<named_values>> and other similar functions.
+
+'''
+
+[[enum_lookup_range]]
+=== `enum_lookup_range`
+
+.#include <boost/reflecto/config.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class>
+  struct enum_lookup_range: unspecialized
+  {
+      static constexpr int min_value = BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE;
+      static constexpr int max_value = BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE;
+  };
+}
+----
+[.text-right]
+<<unspecialized>>
+
+Customization point that controls the integer range scanned at run time to discover enumerator names. Affects the following functions:
+
+* <<value_name>> / <<short_value_name>>
+* <<named_value_count>>
+* <<min_named_value>>
+* <<max_named_value>>
+* <<named_values>>
+* <<short_named_values>>
+* <<sorted_named_values>>
+* <<sorted_short_named_values>>
+
+The `enum_lookup_range` template can be specialized for an individual enum type, or for all enums in a given scope using <<exact_scope_of>> / <<within_scope_of>>.
+
+.Example: library-wide specialization
+[source,c++]
+----
+namespace lib
+{
+    struct this_namespace;
+
+    enum class status
+    {
+        ok = 100,
+        fail = 200
+    };
+}
+
+namespace boost::reflecto
+{
+    template <>
+    struct enum_lookup_range<within_scope_of<lib::this_namespace>>
+    {
+        static constexpr int min_value = 0;
+        static constexpr int max_value = 400;
+    };
+}
+
+static_assert(value_name<lib::status::ok>() == "lib::status::ok");
+----
+
+'''
+
+[[exact_scope_of]]
+=== `exact_scope_of`
+
+.#include <boost/reflecto/bind_instance.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class T>
+  using exact_scope_of = <<unspecified>>;
+}
+----
+
+A marker used as a template argument in a specialization to match types whose enclosing scope is exactly the scope of `T`.
+
+Unlike <<within_scope_of>>, `exact_scope_of<T>` is valid even when `T` is at global scope.
+
+'''
+
+[[lookup_range]]
+=== `lookup_range`
+
+.#include <boost/reflecto/value_name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class Enum>
+  using lookup_range = bind_instance<enum_lookup_range<resolve_for<Enum>>>;
+}
+----
+[.text-right]
+<<bind_instance>> | <<enum_lookup_range>> | <<resolve_for>>
+
+The effective <<enum_lookup_range>> for `Enum`, after applying any type-specific or scope-based specialization via <<bind_instance>>.
+
+'''
+
+[[name]]
+=== `name`
+
+.#include <boost/reflecto/name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  class name: public std::string_view
+  {
+  public:
+
+      constexpr name() noexcept;
+      explicit name(name const &) = default;
+
+      constexpr name_kind kind() const noexcept;
+      constexpr std::uint64_t hash() const noexcept;
+
+      friend constexpr bool operator==(name const &, name const &) noexcept;
+      friend constexpr bool operator!=(name const &, name const &) noexcept;
+  };
+}
+----
+[.text-right]
+<<name_kind>>
+
+A `constexpr` string view annotated with a <<name_kind>> classifier and a precomputed FNV-1a hash. Comparison via `operator==` / `operator!=` is based on the hash, and therefore takes constant time.
+
+'''
+
+[[name_kind]]
+=== `name_kind`
+
+.#include <boost/reflecto/name.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  enum class name_kind
+  {
+      empty,
+      scope_name,
+      type_name,
+      value_name,
+      short_value_name,
+      unnamed_value,
+      value_out_of_lookup_range
+  };
+}
+----
+
+Classifier for a <<name>>:
+
+[cols="1,3"]
+|====
+| `empty`                     | The name is an empty string.
+| `scope_name`                | Returned by <<scope_name_of>>.
+| `type_name`                 | Returned by <<type_name>>.
+| `value_name`                | Returned by <<value_name>> for named enumerators (fully qualified).
+| `short_value_name`          | Returned by <<short_value_name>> for named enumerators (unqualified).
+| `unnamed_value`             | Returned by <<value_name>> / <<short_value_name>> when invoked with an unnamed value.
+| `value_out_of_lookup_range` | Returned by the run-time <<value_name>> / <<short_value_name>> overloads if invoked with a value outside the effective <<lookup_range>>.
+|====
+
+'''
+
+[[resolve_for]]
+=== `resolve_for`
+
+.#include <boost/reflecto/bind_instance.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class>
+  struct resolve_for { };
+}
+----
+
+Wrapper used in a <<bind_instance>> invocation to mark a type argument for scope-based resolution.
+
+'''
+
+[[unspecialized]]
+=== `unspecialized`
+
+.#include <boost/reflecto/config.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  struct unspecialized { };
+}
+----
+
+To make a class template compatible with <<bind_instance>>, by convention its primary template should derive from `unspecialized`. When this is not practical (e.g. for third-party class templates), specialize the <<is_specialization>> template instead.
+
+'''
+
+[[within_scope_of]]
+=== `within_scope_of`
+
+.#include <boost/reflecto/bind_instance.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class T>
+  using within_scope_of = <<unspecified>>;
+}
+----
+
+A marker used as a template argument in a specialization to match types whose enclosing scope is the scope of `T` or any scope nested within it.
+
+WARNING: <<within_scope_of>> cannot be used with globally-scoped types.
+
+[[traits]]
+== Reference: Traits
+
+[[in_scope_of]]
+=== `in_scope_of`
+
+.#include <boost/reflecto/scope_traits.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class T, class U>
+  struct in_scope_of: std::bool_constant<<<unspecified>>>
+  {
+  };
+
+  template <class T, class U>
+  inline constexpr bool in_scope_of_v = in_scope_of<T, U>::value;
+}
+----
+
+Derives from `std::true_type` iff `T`{empty}'s enclosing scope equals `U`{empty}'s enclosing scope, or is (transitively) nested within `U`{empty}'s enclosing scope; otherwise derives from `std::false_type`.
+
+When `U`{empty}'s enclosing scope is the global scope, `in_scope_of<T, U>` derives from `std::true_type` for any `T`.
+
+.Example:
+[source,c++]
+----
+namespace lib
+{
+    struct this_namespace;
+    struct a;
+
+    namespace nested
+    {
+        struct this_namespace;
+        struct c;
+    }
+}
+
+static_assert(in_scope_of_v<lib::a, lib::this_namespace>);
+static_assert(in_scope_of_v<lib::nested::c, lib::this_namespace>);
+static_assert(in_scope_of_v<lib::nested::c, lib::nested::this_namespace>);
+static_assert(!in_scope_of_v<lib::a, lib::nested::this_namespace>);
+----
+
+'''
+
+[[is_specialization]]
+=== `is_specialization`
+
+.#include <boost/reflecto/bind_instance.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class T>
+  struct is_specialization
+  {
+      static constexpr bool value = !std::is_base_of_v<unspecialized, T>;
+  };
+}
+----
+[.text-right]
+<<unspecialized>>
+
+For scope-based specialization, <<bind_instance>> needs to detect whether a class template instance is a specialization or not. By convention, the primary template of the class template used with <<bind_instance>> should derive from <<unspecialized>>. Specialize `is_specialization` to customize the detection.
+
+'''
+
+[[same_scope]]
+=== `same_scope`
+
+.#include <boost/reflecto/scope_traits.hpp>
+[source,c++]
+----
+namespace boost::reflecto
+{
+  template <class T, class U>
+  struct same_scope: std::bool_constant<<<unspecified>>>
+  {
+  };
+
+  template <class T, class U>
+  inline constexpr bool same_scope_v = same_scope<T, U>::value;
+}
+----
+
+Derives from `std::true_type` iff `T` and `U` have the same enclosing scope (including both being at global scope); otherwise derives from `std::false_type`.
+
+.Example:
+[source,c++]
+----
+namespace lib
+{
+    struct a;
+    struct b;
+
+    namespace nested
+    {
+        struct c;
+    }
+}
+
+static_assert(same_scope_v<lib::a, lib::b>);
+static_assert(!same_scope_v<lib::a, lib::nested::c>);
+----
+
+[[configuration]]
+== Configuration
+
+The following configuration macros are defined iff not defined by the user.
+
+* `BOOST_REFLECTO_ASSERT`: The assertion macro used internally by Reflecto. If left undefined, Reflecto will `#include <cassert>` and then `#define BOOST_REFLECTO_ASSERT assert`.
+
+* `BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE`: The default `min_value` of <<enum_lookup_range>>. If left undefined, Reflecto defines it as `-8`.
+
+* `BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE`: The default `max_value` of <<enum_lookup_range>>. If left undefined, Reflecto defines it as `63`.
+
+NOTE: The <<enum_lookup_range>> template can be specialized for an individual enum type or for all enums within a given scope (e.g. a namespace). See <<tutorial-scope_bind>>.
