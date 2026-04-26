@@ -1,1 +1,2038 @@
-placeholder
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.26">
+<meta name="author" content="Reflection and scope-based template specialization for C&#43;&#43;17 | Emil Dotchevski">
+<title>ЯEFLECTO</title>
+<link rel="stylesheet" href="./zajo-dark.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+<meta name="keywords" content="c++,reflection,compile-time,type name,enum,open source">
+<meta name="description" content="Compile-time type and enum-value reflection for C++17">
+<link rel="stylesheet" href="./zajo-light.css" disabled=true>
+<script>
+function switch_style()
+{
+    var i, tag;
+    for( i=0, tag=document.getElementsByTagName("link"); i<tag.length; i++ )
+        if( tag[i].rel.indexOf("stylesheet")!=-1 && tag[i].href.includes("zajo-") )
+            tag[i].disabled = !tag[i].disabled;
+}
+</script>
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>ЯEFLECTO<div style="z-index: 3; bottom:-16px; right:4px; position:fixed"><input width="32" height="32" type="image" alt="Skin" src="./skin.png" onclick="this.blur();switch_style();return false;"/></div></h1>
+<div class="details">
+<span id="author" class="author">Reflection and scope-based template specialization for C&#43;&#43;17 | Emil Dotchevski</span><br>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle"></div>
+<ul class="sectlevel1">
+<li><a href="#_abstract">Abstract</a></li>
+<li><a href="#support">Support</a></li>
+<li><a href="#distribution">Distribution</a></li>
+<li><a href="#canonical_format">Canonical Name Format</a></li>
+<li><a href="#tutorial">Tutorial</a>
+<ul class="sectlevel2">
+<li><a href="#tutorial-names">Names</a></li>
+<li><a href="#tutorial-type_name">Type Names</a></li>
+<li><a href="#tutorial-value_name">Enumerators</a>
+<ul class="sectlevel3">
+<li><a href="#_value_names">Value Names</a></li>
+<li><a href="#_named_values">Named Values</a></li>
+</ul>
+</li>
+<li><a href="#tutorial-scope_name_of">Scopes</a>
+<ul class="sectlevel3">
+<li><a href="#_scope_names">Scope Names</a></li>
+<li><a href="#_scope_traits">Scope Traits</a></li>
+</ul>
+</li>
+<li><a href="#tutorial-scope_bind">Scope-Based Specializations</a>
+<ul class="sectlevel3">
+<li><a href="#_single_argument">Single Argument</a></li>
+<li><a href="#_exact_scope_vs_any_enclosing_scope">Exact scope vs. any enclosing scope</a></li>
+<li><a href="#_multiple_arguments">Multiple arguments</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#synopsis">Synopsis</a>
+<ul class="sectlevel2">
+<li><a href="#config.hpp"><code>config.hpp</code></a></li>
+<li><a href="#name.hpp"><code>name.hpp</code></a></li>
+<li><a href="#type_name.hpp"><code>type_name.hpp</code></a></li>
+<li><a href="#scope_name_of.hpp"><code>scope_name_of.hpp</code></a></li>
+<li><a href="#scope_traits.hpp"><code>scope_traits.hpp</code></a></li>
+<li><a href="#value_name.hpp"><code>value_name.hpp</code></a></li>
+<li><a href="#bind_instance.hpp"><code>bind_instance.hpp</code></a></li>
+</ul>
+</li>
+<li><a href="#functions">Reference: Functions</a>
+<ul class="sectlevel2">
+<li><a href="#max_named_value"><code>max_named_value</code></a></li>
+<li><a href="#min_named_value"><code>min_named_value</code></a></li>
+<li><a href="#named_value_count"><code>named_value_count</code></a></li>
+<li><a href="#named_values"><code>named_values</code></a></li>
+<li><a href="#scope_name_of"><code>scope_name_of</code></a></li>
+<li><a href="#short_named_values"><code>short_named_values</code></a></li>
+<li><a href="#short_value_name"><code>short_value_name</code></a></li>
+<li><a href="#sorted_named_values"><code>sorted_named_values</code></a></li>
+<li><a href="#sorted_short_named_values"><code>sorted_short_named_values</code></a></li>
+<li><a href="#type_name"><code>type_name</code></a></li>
+<li><a href="#value_name"><code>value_name</code></a></li>
+</ul>
+</li>
+<li><a href="#types">Reference: Types</a>
+<ul class="sectlevel2">
+<li><a href="#bind_instance"><code>bind_instance</code></a></li>
+<li><a href="#enumerator"><code>enumerator</code></a></li>
+<li><a href="#enum_lookup_range"><code>enum_lookup_range</code></a></li>
+<li><a href="#exact_scope_of"><code>exact_scope_of</code></a></li>
+<li><a href="#lookup_range"><code>lookup_range</code></a></li>
+<li><a href="#name"><code>name</code></a></li>
+<li><a href="#name_kind"><code>name_kind</code></a></li>
+<li><a href="#resolve_for"><code>resolve_for</code></a></li>
+<li><a href="#unspecialized"><code>unspecialized</code></a></li>
+<li><a href="#within_scope_of"><code>within_scope_of</code></a></li>
+</ul>
+</li>
+<li><a href="#traits">Reference: Traits</a>
+<ul class="sectlevel2">
+<li><a href="#in_scope_of"><code>in_scope_of</code></a></li>
+<li><a href="#is_specialization"><code>is_specialization</code></a></li>
+<li><a href="#same_scope"><code>same_scope</code></a></li>
+</ul>
+</li>
+<li><a href="#configuration">Configuration</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph text-right">
+<p><a href="https://github.com/zajo/reflecto">GitHub</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_abstract">Abstract</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>(Boost) Reflecto is a <code>constexpr</code> library for C&#43;&#43;17. Features:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>Type / enumerator / scope name reflection.</p>
+</li>
+<li>
+<p>Template specialization based on scope (e.g. for any type within a given namespace).</p>
+</li>
+<li>
+<p>Traits for inspecting scope relationships between types.</p>
+</li>
+<li>
+<p>Header-only library, no dependencies.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<table class="tableblock frame-none grid-none stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#tutorial">Tutorial</a> | <a href="#synopsis">Synopsis</a></p></td>
+<td class="tableblock halign-right valign-top"><p class="tableblock">Reference: <a href="#functions">Functions</a> | <a href="#types">Types</a> | <a href="#traits">Traits</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="support">Support</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/zajo/reflecto/issues">Report issues</a> on GitHub</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="distribution">Distribution</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Reflecto is distributed under the <a href="http://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0</a>.</p>
+</div>
+<div class="paragraph">
+<p>The source code is hosted on <a href="https://github.com/boostorg/reflecto">GitHub</a>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Reflecto is not a Boost library.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="canonical_format">Canonical Name Format</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Reflecto uses a canonical format for <code>name</code> objects which is stable across all supported compilers and platforms. This makes Reflecto names persistent, portable identifiers suitable for logging, serialization and other use cases where a type needs to be recognized across an ABI or storage boundary.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="tutorial">Tutorial</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="tutorial-names">Names</h3>
+<div class="paragraph">
+<p>All reflected strings are returned by reference as <a href="#name"><code>name</code></a> objects. The <code>name</code> class derives from <code>std::string_view</code> and adds:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>a <a href="#name_kind">kind()</a> accessor describing what kind of name it is (type, scope, enum value, etc.), and</p>
+</li>
+<li>
+<p>a precomputed FNV-1a <code>hash()</code> used for equality comparisons.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>All <code>name</code> operations are C&#43;&#43;17 <code>constexpr</code>.</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="tutorial-type_name">Type Names</h3>
+<div class="paragraph">
+<p><code><a href="#type_name"><code>type_name</code></a>&lt;T&gt;()</code> returns a reference to a <code>constexpr</code> <code>name</code> with the fully qualified name of <code>T</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#include</span> <span class="cpf">&lt;boost/reflecto/type_name.hpp&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;map&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;vector&gt;</span><span class="cp">
+</span>
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span><span class="p">;</span>
+
+<span class="k">namespace</span> <span class="n">ns</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">point</span>
+    <span class="p">{</span>
+        <span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">;</span>
+    <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">type_name</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="s">"int"</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">type_name</span><span class="o">&lt;</span><span class="n">ns</span><span class="o">::</span><span class="n">point</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="s">"ns::point"</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">type_name</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="s">"std::vector&lt;int&gt;"</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">type_name</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;&gt;&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="s">"std::map&lt;int, std::vector&lt;float&gt;&gt;"</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#type_name"><code>type_name</code></a></p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Type aliases are resolved by the compiler, so the extracted name is that of the underlying type. For example <code>type_name&lt;std::string&gt;()</code> may yield <code>std::__cxx11::basic_string&lt;char&gt;</code> under libstdc++.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<code>type_name</code> is not supported for types enclosed in unnamed namespaces.
+</td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="tutorial-value_name">Enumerators</h3>
+<div class="paragraph">
+<p>All examples in this section use the following definition:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#include</span> <span class="cpf">&lt;boost/reflecto/value_name.hpp&gt;</span><span class="cp">
+</span>
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span><span class="p">;</span>
+
+<span class="k">namespace</span> <span class="n">graphics</span>
+<span class="p">{</span>
+    <span class="k">enum</span> <span class="k">class</span> <span class="nc">color</span>
+    <span class="p">{</span>
+        <span class="n">red</span><span class="p">,</span>
+        <span class="n">green</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">blue</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Enumerator reflection is not supported for enums enclosed in unnamed namespaces.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_value_names">Value Names</h4>
+<div class="paragraph">
+<p>For an enumerator known at compile time, <a href="#value_name"><code>value_name</code></a> returns its fully qualified name (including the enum type for scoped enums), while <a href="#short_value_name"><code>short_value_name</code></a> returns just the enumerator identifier:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">static_assert</span><span class="p">(</span><span class="n">value_name</span><span class="o">&lt;</span><span class="n">graphics</span><span class="o">::</span><span class="n">color</span><span class="o">::</span><span class="n">red</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="s">"graphics::color::red"</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">short_value_name</span><span class="o">&lt;</span><span class="n">graphics</span><span class="o">::</span><span class="n">color</span><span class="o">::</span><span class="n">red</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="s">"red"</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#value_name"><code>value_name</code></a> | <a href="#short_value_name"><code>short_value_name</code></a></p>
+</div>
+<div class="paragraph">
+<p>Both functions also have overloads that take the value as a function argument:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="n">graphics</span><span class="o">::</span><span class="n">color</span> <span class="n">c</span> <span class="o">=</span> <span class="n">graphics</span><span class="o">::</span><span class="n">color</span><span class="o">::</span><span class="n">green</span><span class="p">;</span>
+
+<span class="c1">// Run-time, from a variable:</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">value_name</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">==</span> <span class="s">"graphics::color::green"</span><span class="p">);</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">short_value_name</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">==</span> <span class="s">"green"</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#value_name"><code>value_name</code></a> | <a href="#short_value_name"><code>short_value_name</code></a></p>
+</div>
+<div class="paragraph">
+<p>For each enum, Reflecto generates a table mapping integer values to enumerator names. The covered interval is defined by the <a href="#enum_lookup_range"><code>enum_lookup_range</code></a> template, which can be specialized per enum or for an entire scope (e.g. all enums in a given namespace). See <a href="#tutorial-scope_bind">Scope-Based Specializations</a>.</p>
+</div>
+<div class="paragraph">
+<p>The overloads that take the value as a function argument use it as an index into the table. For values outside the range, the returned <code>name</code> has <code>kind() == name_kind::value_out_of_lookup_range</code>.</p>
+</div>
+<div class="paragraph">
+<p>The overloads that take the value as a non-type template argument trigger a <code>static_assert</code> if the value is outside the range, to help detect inadequate lookup ranges.</p>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_named_values">Named Values</h4>
+<div class="paragraph">
+<p>For a given enum type, the following <code>constexpr</code> functions extract only the named values within the <a href="#enum_lookup_range"><code>enum_lookup_range</code></a>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">static_assert</span><span class="p">(</span><span class="n">named_value_count</span><span class="o">&lt;</span><span class="n">graphics</span><span class="o">::</span><span class="n">color</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">min_named_value</span><span class="o">&lt;</span><span class="n">graphics</span><span class="o">::</span><span class="n">color</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="n">graphics</span><span class="o">::</span><span class="n">color</span><span class="o">::</span><span class="n">red</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">max_named_value</span><span class="o">&lt;</span><span class="n">graphics</span><span class="o">::</span><span class="n">color</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="n">graphics</span><span class="o">::</span><span class="n">color</span><span class="o">::</span><span class="n">blue</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#named_value_count"><code>named_value_count</code></a> | <a href="#min_named_value"><code>min_named_value</code></a> | <a href="#max_named_value"><code>max_named_value</code></a></p>
+</div>
+<div class="paragraph">
+<p>The named values (within the <a href="#enum_lookup_range"><code>enum_lookup_range</code></a>) can be extracted using <a href="#named_values"><code>named_values</code></a> / <a href="#short_named_values"><code>short_named_values</code></a>, which return a reference to a <code>constexpr</code> array of <a href="#enumerator"><code>enumerator</code></a> objects, sorted by integer value:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">auto</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">entries</span> <span class="o">=</span> <span class="n">named_values</span><span class="o">&lt;</span><span class="n">graphics</span><span class="o">::</span><span class="n">color</span><span class="o">&gt;</span><span class="p">();</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">value_name</span> <span class="o">==</span> <span class="s">"graphics::color::red"</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">entries</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">value_name</span> <span class="o">==</span> <span class="s">"graphics::color::green"</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">entries</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">value</span> <span class="o">==</span> <span class="mi">10</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">entries</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">value_name</span> <span class="o">==</span> <span class="s">"graphics::color::blue"</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">entries</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">value</span> <span class="o">==</span> <span class="mi">20</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#named_values"><code>named_values</code></a> | <a href="#enumerator"><code>enumerator</code></a></p>
+</div>
+<div class="paragraph">
+<p>The array can be iterated:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">for</span><span class="p">(</span><span class="k">auto</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="o">:</span> <span class="n">named_values</span><span class="o">&lt;</span><span class="n">graphics</span><span class="o">::</span><span class="n">color</span><span class="o">&gt;</span><span class="p">())</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">value_name</span> <span class="o">&lt;&lt;</span> <span class="s">" = "</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">value</span> <span class="o">&lt;&lt;</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#named_values"><code>named_values</code></a></p>
+</div>
+<div class="paragraph">
+<p><a href="#sorted_named_values"><code>sorted_named_values</code></a> / <a href="#sorted_short_named_values"><code>sorted_short_named_values</code></a> return the same enumerators sorted lexicographically by name.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="tutorial-scope_name_of">Scopes</h3>
+<div class="sect3">
+<h4 id="_scope_names">Scope Names</h4>
+<div class="paragraph">
+<p><code><a href="#scope_name_of"><code>scope_name_of</code></a>&lt;T&gt;()</code> returns the name of the enclosing scope (namespace or class) of a type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#include</span> <span class="cpf">&lt;boost/reflecto/scope_name_of.hpp&gt;</span><span class="cp">
+</span>
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span><span class="p">;</span>
+
+<span class="k">namespace</span> <span class="n">net</span>
+<span class="p">{</span>
+    <span class="k">namespace</span> <span class="n">http</span>
+    <span class="p">{</span>
+        <span class="k">struct</span> <span class="nc">request</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">scope_name_of</span><span class="o">&lt;</span><span class="n">net</span><span class="o">::</span><span class="n">http</span><span class="o">::</span><span class="n">request</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="s">"net::http"</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">scope_name_of</span><span class="o">&lt;</span><span class="n">net</span><span class="o">::</span><span class="n">http</span><span class="o">::</span><span class="n">request</span><span class="o">&gt;</span><span class="p">().</span><span class="n">kind</span><span class="p">()</span> <span class="o">==</span> <span class="n">name_kind</span><span class="o">::</span><span class="n">scope_name</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#scope_name_of"><code>scope_name_of</code></a> | <a href="#name_kind"><code>name_kind</code></a></p>
+</div>
+<div class="paragraph">
+<p>For a type at global scope, the returned <code>name</code> is empty:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">struct</span> <span class="nc">widget</span><span class="p">;</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">scope_name_of</span><span class="o">&lt;</span><span class="n">widget</span><span class="o">&gt;</span><span class="p">().</span><span class="n">empty</span><span class="p">());</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">scope_name_of</span><span class="o">&lt;</span><span class="n">widget</span><span class="o">&gt;</span><span class="p">().</span><span class="n">kind</span><span class="p">()</span> <span class="o">==</span> <span class="n">name_kind</span><span class="o">::</span><span class="n">empty</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#scope_name_of"><code>scope_name_of</code></a> | <a href="#name_kind"><code>name_kind</code></a></p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_scope_traits">Scope Traits</h4>
+<div class="paragraph">
+<p>Reflecto provides two traits for testing scope relationships between two types: <code><a href="#same_scope"><code>same_scope</code></a>&lt;T, U&gt;</code> tests whether <code>T</code> and <code>U</code> share the same enclosing scope, and <code><a href="#in_scope_of"><code>in_scope_of</code></a>&lt;T, U&gt;</code> tests whether <code>T</code> is directly or transitively enclosed in <code>U</code>'s enclosing scope. Both derive from <code>std::true_type</code> / <code>std::false_type</code> and come with the corresponding <code>_v</code> variable templates:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">lib</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">a</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="nc">b</span><span class="p">;</span>
+
+    <span class="k">namespace</span> <span class="n">nested</span>
+    <span class="p">{</span>
+        <span class="k">struct</span> <span class="nc">c</span><span class="p">;</span>
+        <span class="k">struct</span> <span class="nc">d</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">same_scope_v</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">a</span><span class="p">,</span> <span class="n">lib</span><span class="o">::</span><span class="n">b</span><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="o">!</span><span class="n">same_scope_v</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">a</span><span class="p">,</span> <span class="n">lib</span><span class="o">::</span><span class="n">nested</span><span class="o">::</span><span class="n">c</span><span class="o">&gt;</span><span class="p">);</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">in_scope_of_v</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">a</span><span class="p">,</span> <span class="n">lib</span><span class="o">::</span><span class="n">b</span><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">in_scope_of_v</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">nested</span><span class="o">::</span><span class="n">c</span><span class="p">,</span> <span class="n">lib</span><span class="o">::</span><span class="n">a</span><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="o">!</span><span class="n">in_scope_of_v</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">a</span><span class="p">,</span> <span class="n">lib</span><span class="o">::</span><span class="n">nested</span><span class="o">::</span><span class="n">c</span><span class="o">&gt;</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#same_scope"><code>same_scope</code></a> | <a href="#in_scope_of"><code>in_scope_of</code></a></p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="tutorial-scope_bind">Scope-Based Specializations</h3>
+<div class="paragraph">
+<p>Reflecto provides a mechanism for specializing class templates not just for a specific type, but for all types within a given scope. For example, a library may provide a customization point in the form of a class template and use Reflecto to support specializing the template for all types in the library namespace.</p>
+</div>
+<div class="sect3">
+<h4 id="_single_argument">Single Argument</h4>
+<div class="paragraph">
+<p>An example use of the scope-based specialization system is Reflecto&#8217;s own <a href="#enum_lookup_range"><code>enum_lookup_range</code></a> class template (see <a href="#tutorial-value_name">Enumerators</a>), defined as:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+    <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="p">&gt;</span>
+    <span class="k">struct</span> <span class="nc">enum_lookup_range</span><span class="o">:</span> <span class="n">unspecialized</span>
+    <span class="p">{</span>
+        <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">min_value</span> <span class="o">=</span> <span class="n">BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE</span><span class="p">;</span>
+        <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">max_value</span> <span class="o">=</span> <span class="n">BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE</span><span class="p">;</span>
+    <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#enum_lookup_range"><code>enum_lookup_range</code></a> | <a href="#unspecialized"><code>unspecialized</code></a></p>
+</div>
+<div class="paragraph">
+<p>By convention, the primary template derives from <a href="#unspecialized"><code>unspecialized</code></a>, which lets Reflecto detect whether a given template instance is a specialization. If this is impractical, specialize the <a href="#is_specialization"><code>is_specialization</code></a> template instead (it defaults to <code>!std::is_base_of_v&lt;unspecialized, T&gt;</code>).</p>
+</div>
+<div class="paragraph">
+<p>Now <code>enum_lookup_range</code> can be specialized for all enums in a given namespace. We declare a <code>this_namespace</code> tag type to identify the namespace:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">lib_a</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+
+    <span class="k">enum</span> <span class="k">class</span> <span class="nc">status</span>
+    <span class="p">{</span>
+        <span class="n">ok</span><span class="p">,</span>
+        <span class="n">fail</span>
+    <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+    <span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+    <span class="k">struct</span> <span class="nc">enum_lookup_range</span><span class="o">&lt;</span><span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">lib_a</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;&gt;</span>
+    <span class="p">{</span>
+        <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">min_value</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">max_value</span> <span class="o">=</span> <span class="mi">255</span><span class="p">;</span>
+    <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#enum_lookup_range"><code>enum_lookup_range</code></a> | <a href="#within_scope_of"><code>within_scope_of</code></a></p>
+</div>
+<div class="paragraph">
+<p>A different library can do the same without clashing:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">lib_b</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+
+    <span class="k">enum</span> <span class="k">class</span> <span class="nc">mode</span>
+    <span class="p">{</span>
+        <span class="n">fast</span><span class="p">,</span>
+        <span class="n">slow</span>
+    <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+    <span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+    <span class="k">struct</span> <span class="nc">enum_lookup_range</span><span class="o">&lt;</span><span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">lib_b</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;&gt;</span>
+    <span class="p">{</span>
+        <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">min_value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">100</span><span class="p">;</span>
+        <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">max_value</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+    <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#enum_lookup_range"><code>enum_lookup_range</code></a> | <a href="#within_scope_of"><code>within_scope_of</code></a></p>
+</div>
+<div class="paragraph">
+<p>With these specializations in place, use <a href="#bind_instance"><code>bind_instance</code></a> together with <a href="#resolve_for"><code>resolve_for</code></a> to select the correct specialization for a given argument:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">using</span> <span class="n">ra</span> <span class="o">=</span> <span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">enum_lookup_range</span><span class="o">&lt;</span><span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">lib_a</span><span class="o">::</span><span class="n">status</span><span class="o">&gt;&gt;&gt;</span><span class="p">;</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">ra</span><span class="o">::</span><span class="n">min_value</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">ra</span><span class="o">::</span><span class="n">max_value</span> <span class="o">==</span> <span class="mi">255</span><span class="p">);</span>
+
+<span class="k">using</span> <span class="n">rb</span> <span class="o">=</span> <span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">enum_lookup_range</span><span class="o">&lt;</span><span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">lib_b</span><span class="o">::</span><span class="n">mode</span><span class="o">&gt;&gt;&gt;</span><span class="p">;</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">rb</span><span class="o">::</span><span class="n">min_value</span> <span class="o">==</span> <span class="o">-</span><span class="mi">100</span> <span class="o">&amp;&amp;</span> <span class="n">rb</span><span class="o">::</span><span class="n">max_value</span> <span class="o">==</span> <span class="mi">100</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#bind_instance"><code>bind_instance</code></a> | <a href="#enum_lookup_range"><code>enum_lookup_range</code></a> | <a href="#resolve_for"><code>resolve_for</code></a></p>
+</div>
+<div class="paragraph">
+<p>Type-specific specializations (as in the <code>color</code> example from <a href="#tutorial-value_name">Enumerators</a>) are supported and take precedence over scope-based specializations.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_exact_scope_vs_any_enclosing_scope">Exact scope vs. any enclosing scope</h4>
+<div class="paragraph">
+<p>Two scope markers are provided:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="#exact_scope_of"><code>exact_scope_of</code></a>&lt;T&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">matches types whose enclosing scope is exactly the scope of <code>T</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="#within_scope_of"><code>within_scope_of</code></a>&lt;T&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">matches types whose enclosing scope is the scope of <code>T</code> or any scope nested within it.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Exact-scope specializations are more specific than within-scope specializations; the compiler&#8217;s standard partial-ordering rules apply.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">lib</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="nc">widget</span><span class="p">;</span>
+
+    <span class="k">namespace</span> <span class="n">detail</span>
+    <span class="p">{</span>
+        <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+        <span class="k">struct</span> <span class="nc">widget</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">tag</span><span class="o">:</span> <span class="n">unspecialized</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">tag</span><span class="o">&lt;</span><span class="n">exact_scope_of</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;&gt;</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">tag</span><span class="o">&lt;</span><span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;&gt;</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">tag</span><span class="o">&lt;</span><span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">widget</span><span class="o">&gt;&gt;&gt;::</span><span class="n">id</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span> <span class="c1">// exact</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">tag</span><span class="o">&lt;</span><span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">detail</span><span class="o">::</span><span class="n">widget</span><span class="o">&gt;&gt;&gt;::</span><span class="n">id</span> <span class="o">==</span> <span class="mi">2</span><span class="p">);</span> <span class="c1">// within</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#unspecialized"><code>unspecialized</code></a> | <a href="#exact_scope_of"><code>exact_scope_of</code></a> | <a href="#within_scope_of"><code>within_scope_of</code></a> | <a href="#bind_instance"><code>bind_instance</code></a> | <a href="#resolve_for"><code>resolve_for</code></a></p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<code>within_scope_of&lt;T&gt;</code> cannot be used with globally-scoped types&#8201;&#8212;&#8201;a type at global scope matches every scope, defeating the purpose of the marker. This is enforced with a <code>static_assert</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_multiple_arguments">Multiple arguments</h4>
+<div class="paragraph">
+<p>Class templates with several type parameters can mark each parameter for scope-based resolution independently. Here is an example specializing currency conversion fees:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">americas</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+
+    <span class="k">struct</span> <span class="nc">usd</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="nc">cad</span><span class="p">;</span>
+
+    <span class="k">namespace</span> <span class="n">caribbean</span>
+    <span class="p">{</span>
+        <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+
+        <span class="k">struct</span> <span class="nc">jmd</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">namespace</span> <span class="n">europe</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+
+    <span class="k">struct</span> <span class="nc">eur</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="nc">gbp</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">namespace</span> <span class="n">asia</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+
+    <span class="k">struct</span> <span class="nc">jpy</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">From</span><span class="p">,</span> <span class="k">class</span> <span class="nc">To</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">conversion_fee</span><span class="o">:</span> <span class="n">unspecialized</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">basis_points</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">conversion_fee</span><span class="o">&lt;</span>
+    <span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">americas</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">europe</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;&gt;</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">basis_points</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">conversion_fee</span><span class="o">&lt;</span>
+    <span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">americas</span><span class="o">::</span><span class="n">caribbean</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">europe</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;&gt;</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">basis_points</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">conversion_fee</span><span class="o">&lt;</span>
+    <span class="n">americas</span><span class="o">::</span><span class="n">usd</span><span class="p">,</span>
+    <span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">europe</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;&gt;</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">basis_points</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">conversion_fee</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">T</span><span class="o">&gt;</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">basis_points</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#unspecialized"><code>unspecialized</code></a> | <a href="#within_scope_of"><code>within_scope_of</code></a></p>
+</div>
+<div class="paragraph">
+<p><a href="#bind_instance"><code>bind_instance</code></a> picks the best match across all arguments:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">static_assert</span><span class="p">(</span><span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">conversion_fee</span><span class="o">&lt;</span>
+    <span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">americas</span><span class="o">::</span><span class="n">usd</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">europe</span><span class="o">::</span><span class="n">eur</span><span class="o">&gt;&gt;</span>
+<span class="o">&gt;::</span><span class="n">basis_points</span> <span class="o">==</span> <span class="mi">10</span><span class="p">);</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">conversion_fee</span><span class="o">&lt;</span>
+    <span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">americas</span><span class="o">::</span><span class="n">cad</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">europe</span><span class="o">::</span><span class="n">gbp</span><span class="o">&gt;&gt;</span>
+<span class="o">&gt;::</span><span class="n">basis_points</span> <span class="o">==</span> <span class="mi">50</span><span class="p">);</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">conversion_fee</span><span class="o">&lt;</span>
+    <span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">americas</span><span class="o">::</span><span class="n">caribbean</span><span class="o">::</span><span class="n">jmd</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">europe</span><span class="o">::</span><span class="n">eur</span><span class="o">&gt;&gt;</span>
+<span class="o">&gt;::</span><span class="n">basis_points</span> <span class="o">==</span> <span class="mi">25</span><span class="p">);</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">conversion_fee</span><span class="o">&lt;</span>
+    <span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">americas</span><span class="o">::</span><span class="n">usd</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">asia</span><span class="o">::</span><span class="n">jpy</span><span class="o">&gt;&gt;</span>
+<span class="o">&gt;::</span><span class="n">basis_points</span> <span class="o">==</span> <span class="mi">100</span><span class="p">);</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">conversion_fee</span><span class="o">&lt;</span>
+    <span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">europe</span><span class="o">::</span><span class="n">eur</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">europe</span><span class="o">::</span><span class="n">eur</span><span class="o">&gt;&gt;</span>
+<span class="o">&gt;::</span><span class="n">basis_points</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#bind_instance"><code>bind_instance</code></a> | <a href="#resolve_for"><code>resolve_for</code></a></p>
+</div>
+<div class="paragraph">
+<p>When resolving, <code>bind_instance</code> considers all matching specializations and selects the best one using partial-ordering rules similar to standard C&#43;&#43; overload resolution:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>a type-specific match is more specific than an <code>exact_scope_of</code> match;</p>
+</li>
+<li>
+<p>an <code>exact_scope_of</code> match is more specific than a <code>within_scope_of</code> match;</p>
+</li>
+<li>
+<p>a more deeply nested <code>within_scope_of</code> match is more specific than an outer one.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If the partial ordering is ambiguous, we get a compile error. Suppose we add another specialization to the <code>conversion_fee</code> example above:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">conversion_fee</span><span class="o">&lt;</span>
+    <span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">americas</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">europe</span><span class="o">::</span><span class="n">eur</span><span class="o">&gt;</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">basis_points</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#within_scope_of"><code>within_scope_of</code></a></p>
+</div>
+<div class="paragraph">
+<p>Now resolving <code>conversion_fee&lt;resolve_for&lt;americas::usd&gt;, resolve_for&lt;europe::eur&gt;&gt;</code> is ambiguous:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>the existing <code>conversion_fee&lt;americas::usd, within_scope_of&lt;europe::this_namespace&gt;&gt;</code> is more specific in the first argument (exact type vs within-scope) but less specific in the second;</p>
+</li>
+<li>
+<p>the new <code>conversion_fee&lt;within_scope_of&lt;americas::this_namespace&gt;, europe::eur&gt;</code> is more specific in the second argument but less specific in the first.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The partial ordering is ambiguous, so <code>bind_instance</code> produces a compile error.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="synopsis">Synopsis</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="config.hpp"><code>config.hpp</code></h3>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/config.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="cp">#ifndef BOOST_REFLECTO_ASSERT
+#   include &lt;cassert&gt;
+#   define BOOST_REFLECTO_ASSERT assert
+#endif
+</span>
+<span class="cp">#ifndef BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE
+#   define BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE -8
+#endif
+</span>
+<span class="cp">#ifndef BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE
+#   define BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE 63
+#endif
+</span>
+<span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">struct</span> <span class="nc">unspecialized</span> <span class="p">{</span> <span class="p">};</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="p">&gt;</span>
+  <span class="k">struct</span> <span class="nc">enum_lookup_range</span><span class="o">:</span> <span class="n">unspecialized</span>
+  <span class="p">{</span>
+      <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">min_value</span> <span class="o">=</span> <span class="n">BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE</span><span class="p">;</span>
+      <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">max_value</span> <span class="o">=</span> <span class="n">BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p>Reference: <a href="#unspecialized"><code>unspecialized</code></a> | <a href="#enum_lookup_range"><code>enum_lookup_range</code></a> | <a href="#configuration">Configuration</a></p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="name.hpp"><code>name.hpp</code></h3>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">enum</span> <span class="k">class</span> <span class="nc">name_kind</span>
+  <span class="p">{</span>
+      <span class="n">empty</span><span class="p">,</span>
+      <span class="n">scope_name</span><span class="p">,</span>
+      <span class="n">type_name</span><span class="p">,</span>
+      <span class="n">value_name</span><span class="p">,</span>
+      <span class="n">short_value_name</span><span class="p">,</span>
+      <span class="n">unnamed_value</span><span class="p">,</span>
+      <span class="n">value_out_of_lookup_range</span>
+  <span class="p">};</span>
+
+  <span class="k">class</span> <span class="nc">name</span><span class="o">:</span> <span class="k">public</span> <span class="n">std</span><span class="o">::</span><span class="n">string_view</span>
+  <span class="p">{</span>
+  <span class="nl">public:</span>
+
+      <span class="k">constexpr</span> <span class="n">name</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+      <span class="k">explicit</span> <span class="n">name</span><span class="p">(</span><span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+      <span class="k">constexpr</span> <span class="n">name_kind</span> <span class="n">kind</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+      <span class="k">constexpr</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span> <span class="n">hash</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+
+      <span class="k">friend</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">==</span><span class="p">(</span><span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+      <span class="k">friend</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">!=</span><span class="p">(</span><span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p>Reference: <a href="#name_kind"><code>name_kind</code></a> | <a href="#name"><code>name</code></a></p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="type_name.hpp"><code>type_name.hpp</code></h3>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/type_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">type_name</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p>Reference: <a href="#type_name"><code>type_name</code></a></p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="scope_name_of.hpp"><code>scope_name_of.hpp</code></h3>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/scope_name_of.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">scope_name_of</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p>Reference: <a href="#scope_name_of"><code>scope_name_of</code></a></p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="scope_traits.hpp"><code>scope_traits.hpp</code></h3>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/scope_traits.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+  <span class="k">struct</span> <span class="nc">same_scope</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">bool_constant</span><span class="o">&lt;&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;&gt;</span>
+  <span class="p">{</span>
+  <span class="p">};</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+  <span class="kr">inline</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">same_scope_v</span> <span class="o">=</span> <span class="n">same_scope</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">U</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+  <span class="k">struct</span> <span class="nc">in_scope_of</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">bool_constant</span><span class="o">&lt;&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;&gt;</span>
+  <span class="p">{</span>
+  <span class="p">};</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+  <span class="kr">inline</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">in_scope_of_v</span> <span class="o">=</span> <span class="n">in_scope_of</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">U</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p>Reference: <a href="#same_scope"><code>same_scope</code></a> | <a href="#in_scope_of"><code>in_scope_of</code></a></p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="value_name.hpp"><code>value_name.hpp</code></h3>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/value_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">using</span> <span class="n">lookup_range</span> <span class="o">=</span> <span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">enum_lookup_range</span><span class="o">&lt;</span><span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;&gt;&gt;</span><span class="p">;</span>
+
+  <span class="k">struct</span> <span class="nc">enumerator</span>
+  <span class="p">{</span>
+      <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">value_name</span><span class="p">;</span>
+      <span class="kt">int</span> <span class="n">value</span><span class="p">;</span>
+  <span class="p">};</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">auto</span> <span class="n">EnumValue</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">value_name</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">auto</span> <span class="n">EnumValue</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">short_value_name</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">value_name</span><span class="p">(</span><span class="n">Enum</span> <span class="n">value</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">short_value_name</span><span class="p">(</span><span class="n">Enum</span> <span class="n">value</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">named_value_count</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">Enum</span> <span class="n">min_named_value</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">Enum</span> <span class="n">max_named_value</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">enumerator</span> <span class="k">const</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">named_values</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">)[</span><span class="n">named_value_count</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;</span><span class="p">()];</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">enumerator</span> <span class="k">const</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">short_named_values</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">)[</span><span class="n">named_value_count</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;</span><span class="p">()];</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">enumerator</span> <span class="k">const</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">sorted_named_values</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">)[</span><span class="n">named_value_count</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;</span><span class="p">()];</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">enumerator</span> <span class="k">const</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">sorted_short_named_values</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">)[</span><span class="n">named_value_count</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;</span><span class="p">()];</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p>Reference: <a href="#lookup_range"><code>lookup_range</code></a> | <a href="#enumerator"><code>enumerator</code></a> | <a href="#value_name"><code>value_name</code></a> | <a href="#short_value_name"><code>short_value_name</code></a> | <a href="#named_value_count"><code>named_value_count</code></a> | <a href="#min_named_value"><code>min_named_value</code></a> | <a href="#max_named_value"><code>max_named_value</code></a> | <a href="#named_values"><code>named_values</code></a> | <a href="#short_named_values"><code>short_named_values</code></a> | <a href="#sorted_named_values"><code>sorted_named_values</code></a> | <a href="#sorted_short_named_values"><code>sorted_short_named_values</code></a></p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="bind_instance.hpp"><code>bind_instance.hpp</code></h3>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/bind_instance.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="p">&gt;</span>
+  <span class="k">struct</span> <span class="nc">resolve_for</span> <span class="p">{</span> <span class="p">};</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">struct</span> <span class="nc">is_specialization</span>
+  <span class="p">{</span>
+      <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">value</span> <span class="o">=</span> <span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">is_base_of_v</span><span class="o">&lt;</span><span class="n">unspecialized</span><span class="p">,</span> <span class="n">T</span><span class="o">&gt;</span><span class="p">;</span>
+  <span class="p">};</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">using</span> <span class="n">exact_scope_of</span>  <span class="o">=</span> <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">using</span> <span class="n">within_scope_of</span> <span class="o">=</span> <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Inst</span><span class="p">&gt;</span>
+  <span class="k">using</span> <span class="n">bind_instance</span> <span class="o">=</span> <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p>Reference: <a href="#resolve_for"><code>resolve_for</code></a> | <a href="#is_specialization"><code>is_specialization</code></a> | <a href="#exact_scope_of"><code>exact_scope_of</code></a> | <a href="#within_scope_of"><code>within_scope_of</code></a> | <a href="#bind_instance"><code>bind_instance</code></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="functions">Reference: Functions</h2>
+<div class="sectionbody">
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The contents of each Reference section are organized alphabetically.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="max_named_value"><code>max_named_value</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/value_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">Enum</span> <span class="n">max_named_value</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns</dt>
+<dd>
+<p>The largest value among the named enumerators of <code>Enum</code> within the effective <code><a href="#lookup_range"><code>lookup_range</code></a>&lt;Enum&gt;</code>.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="min_named_value"><code>min_named_value</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/value_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">Enum</span> <span class="n">min_named_value</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns</dt>
+<dd>
+<p>The smallest value among the named enumerators of <code>Enum</code> within the effective <code><a href="#lookup_range"><code>lookup_range</code></a>&lt;Enum&gt;</code>.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="named_value_count"><code>named_value_count</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/value_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">named_value_count</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns</dt>
+<dd>
+<p>The number of named enumerators of <code>Enum</code> found within the effective <a href="#lookup_range"><code>lookup_range</code></a>.</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="title">Example:</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">enum</span> <span class="k">class</span> <span class="nc">color</span>
+<span class="p">{</span>
+    <span class="n">red</span><span class="p">,</span>
+    <span class="n">green</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">blue</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="p">};</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">named_value_count</span><span class="o">&lt;</span><span class="n">color</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="named_values"><code>named_values</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/value_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">enumerator</span> <span class="k">const</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">named_values</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">)[</span><span class="n">named_value_count</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;</span><span class="p">()];</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#enumerator"><code>enumerator</code></a> | <a href="#named_value_count"><code>named_value_count</code></a></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns</dt>
+<dd>
+<p>A reference to a <code>constexpr</code> array of <a href="#enumerator"><code>enumerator</code></a> objects, one per named value of <code>Enum</code> within the effective <a href="#lookup_range"><code>lookup_range</code></a>, ordered by increasing integer value. Each element&#8217;s <code>value_name</code> is the fully qualified name (e.g. <code>"color::red"</code>).</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="title">Example:</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">for</span><span class="p">(</span><span class="k">auto</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="o">:</span> <span class="n">named_values</span><span class="o">&lt;</span><span class="n">color</span><span class="o">&gt;</span><span class="p">())</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">value_name</span> <span class="o">&lt;&lt;</span> <span class="s">" = "</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">value</span> <span class="o">&lt;&lt;</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span></code></pre>
+</div>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="scope_name_of"><code>scope_name_of</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/scope_name_of.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">scope_name_of</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#name"><code>name</code></a></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns</dt>
+<dd>
+<p>A reference to a <code>constexpr</code> <a href="#name"><code>name</code></a> object containing the fully qualified name of the enclosing scope of <code>T</code>. If <code>T</code> is at global scope, the returned <code>name</code> is empty and its <code>kind()</code> is <code>name_kind::empty</code>; otherwise its <code>kind()</code> is <code>name_kind::scope_name</code>.</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="title">Example:</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">lib</span>
+<span class="p">{</span>
+    <span class="k">namespace</span> <span class="n">util</span>
+    <span class="p">{</span>
+        <span class="k">struct</span> <span class="nc">engine</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">scope_name_of</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">util</span><span class="o">::</span><span class="n">engine</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="s">"lib::util"</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="short_named_values"><code>short_named_values</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/value_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">enumerator</span> <span class="k">const</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">short_named_values</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">)[</span><span class="n">named_value_count</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;</span><span class="p">()];</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#enumerator"><code>enumerator</code></a> | <a href="#named_value_count"><code>named_value_count</code></a></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns</dt>
+<dd>
+<p>Like <a href="#named_values"><code>named_values</code></a>, but for the unqualified enumerator names (e.g. <code>"red"</code> instead of <code>"color::red"</code>).</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="short_value_name"><code>short_value_name</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/value_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">auto</span> <span class="n">EnumValue</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">short_value_name</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">short_value_name</span><span class="p">(</span><span class="n">Enum</span> <span class="n">value</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#name"><code>name</code></a></p>
+</div>
+<div class="paragraph">
+<p>The first overload takes the value as a non-type template argument; the second looks up <code>value</code> in a precomputed table for the effective <a href="#enum_lookup_range"><code>enum_lookup_range</code></a>.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns</dt>
+<dd>
+<p>A reference to a <a href="#name"><code>name</code></a> containing the unqualified name of the given enumerator (e.g. <code>"red"</code>). For the second overload, if <code>(int)value</code> falls outside the effective <a href="#enum_lookup_range"><code>enum_lookup_range</code></a>, the returned <a href="#name"><code>name</code></a> has <code>kind() == name_kind::value_out_of_lookup_range</code>.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If <code>(int)EnumValue</code> falls outside the effective <a href="#enum_lookup_range"><code>enum_lookup_range</code></a>, the first overload triggers a <code>static_assert</code> to help detect inadequate lookup ranges.
+</td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="sorted_named_values"><code>sorted_named_values</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/value_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">enumerator</span> <span class="k">const</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">sorted_named_values</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">)[</span><span class="n">named_value_count</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;</span><span class="p">()];</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#enumerator"><code>enumerator</code></a> | <a href="#named_value_count"><code>named_value_count</code></a></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns</dt>
+<dd>
+<p>Like <a href="#named_values"><code>named_values</code></a>, but the entries are sorted lexicographically by <code>value_name</code>.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="sorted_short_named_values"><code>sorted_short_named_values</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/value_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">enumerator</span> <span class="k">const</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">sorted_short_named_values</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">)[</span><span class="n">named_value_count</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;</span><span class="p">()];</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#enumerator"><code>enumerator</code></a> | <a href="#named_value_count"><code>named_value_count</code></a></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns</dt>
+<dd>
+<p>Like <a href="#short_named_values"><code>short_named_values</code></a>, but the elements are sorted lexicographically by <code>value_name</code>.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="type_name"><code>type_name</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/type_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">type_name</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#name"><code>name</code></a></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Returns</dt>
+<dd>
+<p>A reference to a <code>constexpr</code> <a href="#name"><code>name</code></a> containing the fully qualified name of <code>T</code>, with <code>kind() == name_kind::type_name</code>.</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="title">Example:</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">static_assert</span><span class="p">(</span><span class="n">type_name</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="s">"int"</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">type_name</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="s">"std::vector&lt;int&gt;"</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Not supported for types enclosed in unnamed namespaces.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Type aliases are resolved by the compiler; the extracted name is that of the underlying type.
+</td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="value_name"><code>value_name</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/value_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">auto</span> <span class="n">EnumValue</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">value_name</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">constexpr</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">value_name</span><span class="p">(</span><span class="n">Enum</span> <span class="n">value</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#name"><code>name</code></a></p>
+</div>
+<div class="paragraph">
+<p>Same as <a href="#short_value_name"><code>short_value_name</code></a>, but returns the fully qualified name of the given enumerator (e.g. <code>"color::red"</code>).</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="types">Reference: Types</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="bind_instance"><code>bind_instance</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/bind_instance.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Inst</span><span class="p">&gt;</span>
+  <span class="k">using</span> <span class="n">bind_instance</span> <span class="o">=</span> <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Given an instantiation <code>Inst</code> of the form <code>S&lt;A1, A2, &#8230;&#8203;, An&gt;</code>, where zero or more of the <code>Ai</code> are of the form <code><a href="#resolve_for"><code>resolve_for</code></a>&lt;T<sub>i</sub>&gt;</code>, <code>bind_instance&lt;Inst&gt;</code> names the specialization of <code>S</code> selected by the following process:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>For each <code>resolve_for&lt;T<sub>i</sub>&gt;</code> argument, the enclosing scopes of <code>T<sub>i</sub></code> are collected, from innermost to outermost (plus the type <code>T<sub>i</sub></code> itself at the innermost position). Each scope contributes two match tokens: an <code>exact_scope_of</code> token and a <code>within_scope_of</code> token; <code>T<sub>i</sub></code> itself contributes a type-match token.</p>
+</li>
+<li>
+<p>All combinations of these tokens across all <code>resolve_for</code> positions are considered as candidate specializations of <code>S</code>.</p>
+</li>
+<li>
+<p>The C&#43;&#43; partial-ordering rules are applied across the candidates; the most specific one for which <a href="#is_specialization"><code>is_specialization</code></a> is <code>true</code> is selected.</p>
+</li>
+<li>
+<p>If no candidate is a specialization, the primary template is used.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>If the partial ordering is ambiguous, the compiler reports an error.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example: scope-based specialization</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">lib</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+
+    <span class="k">struct</span> <span class="nc">widget</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">tag</span><span class="o">:</span> <span class="n">unspecialized</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">tag</span><span class="o">&lt;</span><span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;&gt;</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">tag</span><span class="o">&lt;</span><span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">widget</span><span class="o">&gt;&gt;&gt;::</span><span class="n">id</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Example: type-specific specialization takes precedence over a scope match</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">lib</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+
+    <span class="k">struct</span> <span class="nc">widget</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="nc">gadget</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">tag</span><span class="o">:</span> <span class="n">unspecialized</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">tag</span><span class="o">&lt;</span><span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;&gt;</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">tag</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">widget</span><span class="o">&gt;</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">tag</span><span class="o">&lt;</span><span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">widget</span><span class="o">&gt;&gt;&gt;::</span><span class="n">id</span> <span class="o">==</span> <span class="mi">2</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">tag</span><span class="o">&lt;</span><span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">gadget</span><span class="o">&gt;&gt;&gt;::</span><span class="n">id</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Example: ambiguous resolution</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">lib_a</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+
+    <span class="k">struct</span> <span class="nc">x</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">namespace</span> <span class="n">lib_b</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+
+    <span class="k">struct</span> <span class="nc">y</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">tag</span><span class="o">:</span> <span class="n">unspecialized</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">bps</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">tag</span><span class="o">&lt;</span><span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">lib_a</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">U</span><span class="o">&gt;</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">bps</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">tag</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">lib_b</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;&gt;</span>
+<span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">bps</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// Both partial specializations match but neither is more specific</span>
+<span class="c1">// than the other -- the compiler reports the ambiguity.</span></code></pre>
+</div>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="enumerator"><code>enumerator</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/value_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">struct</span> <span class="nc">enumerator</span>
+  <span class="p">{</span>
+      <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span> <span class="n">value_name</span><span class="p">;</span>
+      <span class="kt">int</span> <span class="n">value</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#name"><code>name</code></a></p>
+</div>
+<div class="paragraph">
+<p>The type of the elements of the array returned by <a href="#named_values"><code>named_values</code></a> and other similar functions.</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="enum_lookup_range"><code>enum_lookup_range</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/config.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="p">&gt;</span>
+  <span class="k">struct</span> <span class="nc">enum_lookup_range</span><span class="o">:</span> <span class="n">unspecialized</span>
+  <span class="p">{</span>
+      <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">min_value</span> <span class="o">=</span> <span class="n">BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE</span><span class="p">;</span>
+      <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">max_value</span> <span class="o">=</span> <span class="n">BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#unspecialized"><code>unspecialized</code></a></p>
+</div>
+<div class="paragraph">
+<p>Customization point that controls the integer range scanned at run time to discover enumerator names. Affects the following functions:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#value_name"><code>value_name</code></a> / <a href="#short_value_name"><code>short_value_name</code></a></p>
+</li>
+<li>
+<p><a href="#named_value_count"><code>named_value_count</code></a></p>
+</li>
+<li>
+<p><a href="#min_named_value"><code>min_named_value</code></a></p>
+</li>
+<li>
+<p><a href="#max_named_value"><code>max_named_value</code></a></p>
+</li>
+<li>
+<p><a href="#named_values"><code>named_values</code></a></p>
+</li>
+<li>
+<p><a href="#short_named_values"><code>short_named_values</code></a></p>
+</li>
+<li>
+<p><a href="#sorted_named_values"><code>sorted_named_values</code></a></p>
+</li>
+<li>
+<p><a href="#sorted_short_named_values"><code>sorted_short_named_values</code></a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The <code>enum_lookup_range</code> template can be specialized for an individual enum type, or for all enums in a given scope using <a href="#exact_scope_of"><code>exact_scope_of</code></a> / <a href="#within_scope_of"><code>within_scope_of</code></a>.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example: library-wide specialization</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">lib</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+
+    <span class="k">enum</span> <span class="k">class</span> <span class="nc">status</span>
+    <span class="p">{</span>
+        <span class="n">ok</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">fail</span> <span class="o">=</span> <span class="mi">200</span>
+    <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+    <span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+    <span class="k">struct</span> <span class="nc">enum_lookup_range</span><span class="o">&lt;</span><span class="n">within_scope_of</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;&gt;</span>
+    <span class="p">{</span>
+        <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">min_value</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">max_value</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+    <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">value_name</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">status</span><span class="o">::</span><span class="n">ok</span><span class="o">&gt;</span><span class="p">()</span> <span class="o">==</span> <span class="s">"lib::status::ok"</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="exact_scope_of"><code>exact_scope_of</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/bind_instance.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">using</span> <span class="n">exact_scope_of</span> <span class="o">=</span> <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A marker used as a template argument in a specialization to match types whose enclosing scope is exactly the scope of <code>T</code>.</p>
+</div>
+<div class="paragraph">
+<p>Unlike <a href="#within_scope_of"><code>within_scope_of</code></a>, <code>exact_scope_of&lt;T&gt;</code> is valid even when <code>T</code> is at global scope.</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="lookup_range"><code>lookup_range</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/value_name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">Enum</span><span class="p">&gt;</span>
+  <span class="k">using</span> <span class="n">lookup_range</span> <span class="o">=</span> <span class="n">bind_instance</span><span class="o">&lt;</span><span class="n">enum_lookup_range</span><span class="o">&lt;</span><span class="n">resolve_for</span><span class="o">&lt;</span><span class="n">Enum</span><span class="o">&gt;&gt;&gt;</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#bind_instance"><code>bind_instance</code></a> | <a href="#enum_lookup_range"><code>enum_lookup_range</code></a> | <a href="#resolve_for"><code>resolve_for</code></a></p>
+</div>
+<div class="paragraph">
+<p>The effective <a href="#enum_lookup_range"><code>enum_lookup_range</code></a> for <code>Enum</code>, after applying any type-specific or scope-based specialization via <a href="#bind_instance"><code>bind_instance</code></a>.</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="name"><code>name</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">class</span> <span class="nc">name</span><span class="o">:</span> <span class="k">public</span> <span class="n">std</span><span class="o">::</span><span class="n">string_view</span>
+  <span class="p">{</span>
+  <span class="nl">public:</span>
+
+      <span class="k">constexpr</span> <span class="n">name</span><span class="p">()</span> <span class="k">noexcept</span><span class="p">;</span>
+      <span class="k">explicit</span> <span class="n">name</span><span class="p">(</span><span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+      <span class="k">constexpr</span> <span class="n">name_kind</span> <span class="n">kind</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+      <span class="k">constexpr</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span> <span class="n">hash</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
+
+      <span class="k">friend</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">==</span><span class="p">(</span><span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+      <span class="k">friend</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">!=</span><span class="p">(</span><span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">,</span> <span class="n">name</span> <span class="k">const</span> <span class="o">&amp;</span><span class="p">)</span> <span class="k">noexcept</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#name_kind"><code>name_kind</code></a></p>
+</div>
+<div class="paragraph">
+<p>A <code>constexpr</code> string view annotated with a <a href="#name_kind"><code>name_kind</code></a> classifier and a precomputed FNV-1a hash. Comparison via <code>operator==</code> / <code>operator!=</code> is based on the hash, and therefore takes constant time.</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="name_kind"><code>name_kind</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/name.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">enum</span> <span class="k">class</span> <span class="nc">name_kind</span>
+  <span class="p">{</span>
+      <span class="n">empty</span><span class="p">,</span>
+      <span class="n">scope_name</span><span class="p">,</span>
+      <span class="n">type_name</span><span class="p">,</span>
+      <span class="n">value_name</span><span class="p">,</span>
+      <span class="n">short_value_name</span><span class="p">,</span>
+      <span class="n">unnamed_value</span><span class="p">,</span>
+      <span class="n">value_out_of_lookup_range</span>
+  <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Classifier for a <a href="#name"><code>name</code></a>:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>empty</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name is an empty string.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>scope_name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Returned by <a href="#scope_name_of"><code>scope_name_of</code></a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>type_name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Returned by <a href="#type_name"><code>type_name</code></a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>value_name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Returned by <a href="#value_name"><code>value_name</code></a> for named enumerators (fully qualified).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>short_value_name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Returned by <a href="#short_value_name"><code>short_value_name</code></a> for named enumerators (unqualified).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>unnamed_value</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Returned by <a href="#value_name"><code>value_name</code></a> / <a href="#short_value_name"><code>short_value_name</code></a> when invoked with an unnamed value.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>value_out_of_lookup_range</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Returned by the run-time <a href="#value_name"><code>value_name</code></a> / <a href="#short_value_name"><code>short_value_name</code></a> overloads if invoked with a value outside the effective <a href="#lookup_range"><code>lookup_range</code></a>.</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="resolve_for"><code>resolve_for</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/bind_instance.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span><span class="p">&gt;</span>
+  <span class="k">struct</span> <span class="nc">resolve_for</span> <span class="p">{</span> <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wrapper used in a <a href="#bind_instance"><code>bind_instance</code></a> invocation to mark a type argument for scope-based resolution.</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="unspecialized"><code>unspecialized</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/config.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">struct</span> <span class="nc">unspecialized</span> <span class="p">{</span> <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To make a class template compatible with <a href="#bind_instance"><code>bind_instance</code></a>, by convention its primary template should derive from <code>unspecialized</code>. When this is not practical (e.g. for third-party class templates), specialize the <a href="#is_specialization"><code>is_specialization</code></a> template instead.</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="within_scope_of"><code>within_scope_of</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/bind_instance.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">using</span> <span class="n">within_scope_of</span> <span class="o">=</span> <span class="o">&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A marker used as a template argument in a specialization to match types whose enclosing scope is the scope of <code>T</code> or any scope nested within it.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<a href="#within_scope_of"><code>within_scope_of</code></a> cannot be used with globally-scoped types.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="traits">Reference: Traits</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="in_scope_of"><code>in_scope_of</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/scope_traits.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+  <span class="k">struct</span> <span class="nc">in_scope_of</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">bool_constant</span><span class="o">&lt;&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;&gt;</span>
+  <span class="p">{</span>
+  <span class="p">};</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+  <span class="kr">inline</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">in_scope_of_v</span> <span class="o">=</span> <span class="n">in_scope_of</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">U</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Derives from <code>std::true_type</code> iff <code>T</code>'s enclosing scope equals <code>U</code>'s enclosing scope, or is (transitively) nested within <code>U</code>'s enclosing scope; otherwise derives from <code>std::false_type</code>.</p>
+</div>
+<div class="paragraph">
+<p>When <code>U</code>'s enclosing scope is the global scope, <code>in_scope_of&lt;T, U&gt;</code> derives from <code>std::true_type</code> for any <code>T</code>.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example:</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">lib</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="nc">a</span><span class="p">;</span>
+
+    <span class="k">namespace</span> <span class="n">nested</span>
+    <span class="p">{</span>
+        <span class="k">struct</span> <span class="nc">this_namespace</span><span class="p">;</span>
+        <span class="k">struct</span> <span class="nc">c</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">in_scope_of_v</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">a</span><span class="p">,</span> <span class="n">lib</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">in_scope_of_v</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">nested</span><span class="o">::</span><span class="n">c</span><span class="p">,</span> <span class="n">lib</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">in_scope_of_v</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">nested</span><span class="o">::</span><span class="n">c</span><span class="p">,</span> <span class="n">lib</span><span class="o">::</span><span class="n">nested</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="o">!</span><span class="n">in_scope_of_v</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">a</span><span class="p">,</span> <span class="n">lib</span><span class="o">::</span><span class="n">nested</span><span class="o">::</span><span class="n">this_namespace</span><span class="o">&gt;</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="is_specialization"><code>is_specialization</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/bind_instance.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">struct</span> <span class="nc">is_specialization</span>
+  <span class="p">{</span>
+      <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">value</span> <span class="o">=</span> <span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">is_base_of_v</span><span class="o">&lt;</span><span class="n">unspecialized</span><span class="p">,</span> <span class="n">T</span><span class="o">&gt;</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph text-right">
+<p><a href="#unspecialized"><code>unspecialized</code></a></p>
+</div>
+<div class="paragraph">
+<p>For scope-based specialization, <a href="#bind_instance"><code>bind_instance</code></a> needs to detect whether a class template instance is a specialization or not. By convention, the primary template of the class template used with <a href="#bind_instance"><code>bind_instance</code></a> should derive from <a href="#unspecialized"><code>unspecialized</code></a>. Specialize <code>is_specialization</code> to customize the detection.</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="same_scope"><code>same_scope</code></h3>
+<div class="listingblock">
+<div class="title">#include &lt;boost/reflecto/scope_traits.hpp&gt;</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">boost</span><span class="o">::</span><span class="n">reflecto</span>
+<span class="p">{</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+  <span class="k">struct</span> <span class="nc">same_scope</span><span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">bool_constant</span><span class="o">&lt;&lt;&lt;</span><span class="n">unspecified</span><span class="o">&gt;&gt;&gt;</span>
+  <span class="p">{</span>
+  <span class="p">};</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="p">,</span> <span class="k">class</span> <span class="nc">U</span><span class="p">&gt;</span>
+  <span class="kr">inline</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">same_scope_v</span> <span class="o">=</span> <span class="n">same_scope</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">U</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Derives from <code>std::true_type</code> iff <code>T</code> and <code>U</code> have the same enclosing scope (including both being at global scope); otherwise derives from <code>std::false_type</code>.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example:</div>
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++"><span class="k">namespace</span> <span class="n">lib</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">a</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="nc">b</span><span class="p">;</span>
+
+    <span class="k">namespace</span> <span class="n">nested</span>
+    <span class="p">{</span>
+        <span class="k">struct</span> <span class="nc">c</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">same_scope_v</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">a</span><span class="p">,</span> <span class="n">lib</span><span class="o">::</span><span class="n">b</span><span class="o">&gt;</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="o">!</span><span class="n">same_scope_v</span><span class="o">&lt;</span><span class="n">lib</span><span class="o">::</span><span class="n">a</span><span class="p">,</span> <span class="n">lib</span><span class="o">::</span><span class="n">nested</span><span class="o">::</span><span class="n">c</span><span class="o">&gt;</span><span class="p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="configuration">Configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The following configuration macros are defined iff not defined by the user.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>BOOST_REFLECTO_ASSERT</code>: The assertion macro used internally by Reflecto. If left undefined, Reflecto will <code>#include &lt;cassert&gt;</code> and then <code>#define BOOST_REFLECTO_ASSERT assert</code>.</p>
+</li>
+<li>
+<p><code>BOOST_REFLECTO_DEFAULT_ENUM_MIN_VALUE</code>: The default <code>min_value</code> of <a href="#enum_lookup_range"><code>enum_lookup_range</code></a>. If left undefined, Reflecto defines it as <code>-8</code>.</p>
+</li>
+<li>
+<p><code>BOOST_REFLECTO_DEFAULT_ENUM_MAX_VALUE</code>: The default <code>max_value</code> of <a href="#enum_lookup_range"><code>enum_lookup_range</code></a>. If left undefined, Reflecto defines it as <code>63</code>.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The <a href="#enum_lookup_range"><code>enum_lookup_range</code></a> template can be specialized for an individual enum type or for all enums within a given scope (e.g. a namespace). See <a href="#tutorial-scope_bind">Scope-Based Specializations</a>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+</div>
+</div>
+</body>
+</html>
