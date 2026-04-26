@@ -35,26 +35,26 @@ function switch_style()
 <li><a href="#_abstract">Abstract</a></li>
 <li><a href="#support">Support</a></li>
 <li><a href="#distribution">Distribution</a></li>
-<li><a href="#canonical_format">Canonical Name Format</a></li>
+<li><a href="#canonical_format">Canonical name format</a></li>
 <li><a href="#tutorial">Tutorial</a>
 <ul class="sectlevel2">
 <li><a href="#tutorial-names">Names</a></li>
-<li><a href="#tutorial-type_name">Type Names</a></li>
+<li><a href="#tutorial-type_name">Type names</a></li>
 <li><a href="#tutorial-value_name">Enumerators</a>
 <ul class="sectlevel3">
-<li><a href="#_value_names">Value Names</a></li>
-<li><a href="#_named_values">Named Values</a></li>
+<li><a href="#_value_names">Value names</a></li>
+<li><a href="#_named_values">Named values</a></li>
 </ul>
 </li>
 <li><a href="#tutorial-scope_name_of">Scopes</a>
 <ul class="sectlevel3">
-<li><a href="#_scope_names">Scope Names</a></li>
-<li><a href="#_scope_traits">Scope Traits</a></li>
+<li><a href="#_scope_names">Scope names</a></li>
+<li><a href="#_scope_traits">Scope traits</a></li>
 </ul>
 </li>
-<li><a href="#tutorial-scope_bind">Scope-Based Specializations</a>
+<li><a href="#tutorial-scope_bind">Scope-based specializations</a>
 <ul class="sectlevel3">
-<li><a href="#_single_argument">Single Argument</a></li>
+<li><a href="#_single_argument">Single argument</a></li>
 <li><a href="#_exact_scope_vs_any_enclosing_scope">Exact scope vs. any enclosing scope</a></li>
 <li><a href="#_multiple_arguments">Multiple arguments</a></li>
 </ul>
@@ -72,7 +72,7 @@ function switch_style()
 <li><a href="#bind_instance.hpp"><code>bind_instance.hpp</code></a></li>
 </ul>
 </li>
-<li><a href="#functions">Reference: Functions</a>
+<li><a href="#functions">Reference: functions</a>
 <ul class="sectlevel2">
 <li><a href="#max_named_value"><code>max_named_value</code></a></li>
 <li><a href="#min_named_value"><code>min_named_value</code></a></li>
@@ -87,7 +87,7 @@ function switch_style()
 <li><a href="#value_name"><code>value_name</code></a></li>
 </ul>
 </li>
-<li><a href="#types">Reference: Types</a>
+<li><a href="#types">Reference: types</a>
 <ul class="sectlevel2">
 <li><a href="#bind_instance"><code>bind_instance</code></a></li>
 <li><a href="#enumerator"><code>enumerator</code></a></li>
@@ -101,7 +101,7 @@ function switch_style()
 <li><a href="#within_scope_of"><code>within_scope_of</code></a></li>
 </ul>
 </li>
-<li><a href="#traits">Reference: Traits</a>
+<li><a href="#traits">Reference: traits</a>
 <ul class="sectlevel2">
 <li><a href="#in_scope_of"><code>in_scope_of</code></a></li>
 <li><a href="#is_specialization"><code>is_specialization</code></a></li>
@@ -196,7 +196,7 @@ Reflecto is not a Boost library.
 </div>
 </div>
 <div class="sect1">
-<h2 id="canonical_format">Canonical Name Format</h2>
+<h2 id="canonical_format">Canonical name format</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Reflecto uses a canonical format for <code>name</code> objects which is stable across all supported compilers and platforms. This makes Reflecto names persistent, portable identifiers suitable for logging, serialization and other use cases where a type needs to be recognized across an ABI or storage boundary.</p>
@@ -227,7 +227,7 @@ Reflecto is not a Boost library.
 <hr>
 </div>
 <div class="sect2">
-<h3 id="tutorial-type_name">Type Names</h3>
+<h3 id="tutorial-type_name">Type names</h3>
 <div class="paragraph">
 <p><code><a href="#type_name"><code>type_name</code></a>&lt;T&gt;()</code> returns a reference to a <code>constexpr</code> <code>name</code> with the fully qualified name of <code>T</code>:</p>
 </div>
@@ -317,7 +317,7 @@ Enumerator reflection is not supported for enums enclosed in unnamed namespaces.
 </table>
 </div>
 <div class="sect3">
-<h4 id="_value_names">Value Names</h4>
+<h4 id="_value_names">Value names</h4>
 <div class="paragraph">
 <p>For an enumerator known at compile time, <a href="#value_name"><code>value_name</code></a> returns its fully qualified name (including the enum type for scoped enums), while <a href="#short_value_name"><code>short_value_name</code></a> returns just the enumerator identifier:</p>
 </div>
@@ -346,7 +346,7 @@ Enumerator reflection is not supported for enums enclosed in unnamed namespaces.
 <p><a href="#value_name"><code>value_name</code></a> | <a href="#short_value_name"><code>short_value_name</code></a></p>
 </div>
 <div class="paragraph">
-<p>For each enum, Reflecto generates a table mapping integer values to enumerator names. The covered interval is defined by the <a href="#enum_lookup_range"><code>enum_lookup_range</code></a> template, which can be specialized per enum or for an entire scope (e.g. all enums in a given namespace). See <a href="#tutorial-scope_bind">Scope-Based Specializations</a>.</p>
+<p>For each enum, Reflecto generates a table mapping integer values to enumerator names. The covered interval is defined by the <a href="#enum_lookup_range"><code>enum_lookup_range</code></a> template, which can be specialized per enum or for an entire scope (e.g. all enums in a given namespace). See <a href="#tutorial-scope_bind">Scope-based specializations</a>.</p>
 </div>
 <div class="paragraph">
 <p>The overloads that take the value as a function argument use it as an index into the table. For values outside the range, the returned <code>name</code> has <code>kind() == name_kind::value_out_of_lookup_range</code>.</p>
@@ -357,7 +357,7 @@ Enumerator reflection is not supported for enums enclosed in unnamed namespaces.
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_named_values">Named Values</h4>
+<h4 id="_named_values">Named values</h4>
 <div class="paragraph">
 <p>For a given enum type, the following <code>constexpr</code> functions extract only the named values within the <a href="#enum_lookup_range"><code>enum_lookup_range</code></a>:</p>
 </div>
@@ -410,7 +410,7 @@ Enumerator reflection is not supported for enums enclosed in unnamed namespaces.
 <div class="sect2">
 <h3 id="tutorial-scope_name_of">Scopes</h3>
 <div class="sect3">
-<h4 id="_scope_names">Scope Names</h4>
+<h4 id="_scope_names">Scope names</h4>
 <div class="paragraph">
 <p><code><a href="#scope_name_of"><code>scope_name_of</code></a>&lt;T&gt;()</code> returns the name of the enclosing scope (namespace or class) of a type:</p>
 </div>
@@ -451,7 +451,7 @@ Enumerator reflection is not supported for enums enclosed in unnamed namespaces.
 </div>
 </div>
 <div class="sect3">
-<h4 id="_scope_traits">Scope Traits</h4>
+<h4 id="_scope_traits">Scope traits</h4>
 <div class="paragraph">
 <p>Reflecto provides two traits for testing scope relationships between two types: <code><a href="#same_scope"><code>same_scope</code></a>&lt;T, U&gt;</code> tests whether <code>T</code> and <code>U</code> share the same enclosing scope, and <code><a href="#in_scope_of"><code>in_scope_of</code></a>&lt;T, U&gt;</code> tests whether <code>T</code> is directly or transitively enclosed in <code>U</code>'s enclosing scope. Both derive from <code>std::true_type</code> / <code>std::false_type</code> and come with the corresponding <code>_v</code> variable templates:</p>
 </div>
@@ -484,12 +484,12 @@ Enumerator reflection is not supported for enums enclosed in unnamed namespaces.
 </div>
 </div>
 <div class="sect2">
-<h3 id="tutorial-scope_bind">Scope-Based Specializations</h3>
+<h3 id="tutorial-scope_bind">Scope-based specializations</h3>
 <div class="paragraph">
 <p>Reflecto provides a mechanism for specializing class templates not just for a specific type, but for all types within a given scope. For example, a library may provide a customization point in the form of a class template and use Reflecto to support specializing the template for all types in the library namespace.</p>
 </div>
 <div class="sect3">
-<h4 id="_single_argument">Single Argument</h4>
+<h4 id="_single_argument">Single argument</h4>
 <div class="paragraph">
 <p>An example use of the scope-based specialization system is Reflecto&#8217;s own <a href="#enum_lookup_range"><code>enum_lookup_range</code></a> class template (see <a href="#tutorial-value_name">Enumerators</a>), defined as:</p>
 </div>
@@ -1085,7 +1085,7 @@ Enumerator reflection is not supported for enums enclosed in unnamed namespaces.
 </div>
 </div>
 <div class="sect1">
-<h2 id="functions">Reference: Functions</h2>
+<h2 id="functions">Reference: functions</h2>
 <div class="sectionbody">
 <div class="admonitionblock tip">
 <table>
@@ -1448,7 +1448,7 @@ Type aliases are resolved by the compiler; the extracted name is that of the und
 </div>
 </div>
 <div class="sect1">
-<h2 id="types">Reference: Types</h2>
+<h2 id="types">Reference: types</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="bind_instance"><code>bind_instance</code></h3>
@@ -1884,7 +1884,7 @@ Type aliases are resolved by the compiler; the extracted name is that of the und
 </div>
 </div>
 <div class="sect1">
-<h2 id="traits">Reference: Traits</h2>
+<h2 id="traits">Reference: traits</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="in_scope_of"><code>in_scope_of</code></h3>
@@ -2022,7 +2022,7 @@ Type aliases are resolved by the compiler; the extracted name is that of the und
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The <a href="#enum_lookup_range"><code>enum_lookup_range</code></a> template can be specialized for an individual enum type or for all enums within a given scope (e.g. a namespace). See <a href="#tutorial-scope_bind">Scope-Based Specializations</a>.
+The <a href="#enum_lookup_range"><code>enum_lookup_range</code></a> template can be specialized for an individual enum type or for all enums within a given scope (e.g. a namespace). See <a href="#tutorial-scope_bind">Scope-based specializations</a>.
 </td>
 </tr>
 </table>

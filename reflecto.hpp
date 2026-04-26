@@ -2,7 +2,7 @@
 #define BOOST_REFLECTO_HPP_INCLUDED
 
 // Boost Reflecto single header distribution. Do not edit.
-// Generated on Apr 26, 2026 from https://github.com/zajo/reflecto/tree/b93c86e.
+// Generated on Apr 26, 2026 from https://github.com/zajo/reflecto/tree/a1b21f3.
 
 // Copyright 2026 Emil Dotchevski
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
