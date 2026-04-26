@@ -20,7 +20,7 @@ int main()
     CHECK(empty_name.empty());
     CHECK(empty_name.kind() == name_kind::empty);
     CHECK(empty_name.size() == 0);
-    CHECK(empty_name.hash() == 0);
+    CHECK(empty_name.hash() == 14695981039346656037ull);
 
     ////////////////////////////////////////
 

@@ -1,0 +1,17 @@
+# Copyright 2017 Peter Dimov
+# Copyright 2018-2026 Emil Dotchevski and Reverge Studios, Inc.
+#
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+project doc/reflecto ;
+using asciidoctor ;
+
+html index.html : reflecto.adoc : <asciidoctor-attribute>stylesheet=zajo-dark.css <asciidoctor-attribute>linkcss <dependency>docinfo.html ;
+install html_ : index.html skin.png zajo-dark.css zajo-light.css rouge-github.css : <location>html ;
+
+alias boostdoc ;
+explicit boostdoc ;
+alias boostrelease : html_ ;
+explicit boostrelease ;

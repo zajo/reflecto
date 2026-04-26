@@ -15,6 +15,7 @@ namespace boost::reflecto {
 enum class name_kind
 {
     empty,
+    scope_name,
     type_name,
     value_name,
     short_value_name,
@@ -27,8 +28,6 @@ enum class name_kind
 class name:
     public std::string_view
 {
-    name & operator=(name const &) = delete;
-
     std::uint64_t hash_;
     name_kind kind_;
 
@@ -38,7 +37,7 @@ public:
 
     constexpr name() noexcept:
         std::string_view(),
-        hash_(0),
+        hash_(14695981039346656037ull),
         kind_(name_kind::empty)
     {
     }
@@ -72,6 +71,6 @@ public:
     }
 };
 
-}
+} // namespace boost::reflecto
 
 #endif // #ifndef BOOST_REFLECTO_NAME_HPP_INCLUDED

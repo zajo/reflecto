@@ -7,7 +7,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/reflecto/config.hpp>
-#include <boost/reflecto/ns_bind.hpp>
+#include <boost/reflecto/bind_instance.hpp>
 #include <boost/reflecto/name.hpp>
 #include <utility>
 
@@ -19,7 +19,7 @@
 namespace boost::reflecto {
 
 template <class Enum>
-using lookup_range = ns_bind<enum_lookup_range<resolve_for<Enum>>>;
+using lookup_range = bind_instance<enum_lookup_range<resolve_for<Enum>>>;
 
 namespace d
 {
@@ -185,7 +185,7 @@ namespace d
             named ? s.hash : hash_sequence(x.begin, x.begin + x.size),
             named ? name_kind::short_value_name : name_kind::unnamed_value};
     };
-}
+} // namespace d
 
 template <auto EnumValue>
 constexpr name const & value_name() noexcept
@@ -274,7 +274,7 @@ namespace d
             return out_of_lookup_range_name;
         }
     };
-}
+} // namespace d
 
 template <class Enum>
 constexpr name const & value_name(Enum value) noexcept
@@ -365,7 +365,7 @@ namespace d
     {
         static constexpr enumerator values[sizeof...(NamedIs)] = { { short_value_name<static_cast<Enum>(NamedIs)>(), NamedIs }... };
     };
-}
+} // namespace d
 
 template <class Enum>
 constexpr int named_value_count() noexcept
@@ -448,7 +448,7 @@ namespace d
 
         static constexpr enumerator values[sizeof...(Js)] = { holder::values[si::value.v[Js]]... };
     };
-}
+} // namespace d
 
 template <class Enum>
 constexpr enumerator const (&sorted_named_values() noexcept)[named_value_count<Enum>()]
@@ -470,7 +470,7 @@ constexpr enumerator const (&sorted_short_named_values() noexcept)[named_value_c
     >::values;
 }
 
-}
+} // namespace boost::reflecto
 
 #if defined(__clang__) && __clang_major__ >= 15 && __clang_major__ < 20
 #   pragma clang diagnostic pop

@@ -210,7 +210,7 @@ namespace d
     template <int MaxSize>
     struct stripped
     {
-        char buf[MaxSize];
+        char buf[MaxSize + 1];
         int len;
         std::uint64_t hash;
     };
@@ -225,6 +225,50 @@ namespace d
         while( src != end )
         {
             if( src[0] == ' ' && src != end - 1 && src[1] == '>' )
+                ++src;
+            else
+            {
+                h = hash_step(h, *src);
+                result.buf[len++] = *src++;
+            }
+        }
+        result.len = len;
+        result.hash = h;
+        return result;
+    }
+
+    constexpr int find_parent_ns_end(char const * s, int end) noexcept
+    {
+        int depth = 0;
+        for( int i = end; i != 1; --i )
+        {
+            char ch = s[i - 1];
+            if( ch == '>' )
+                ++depth;
+            else if( ch == '<' )
+                --depth;
+            else if( depth == 0 && ch == ':' && s[i - 2] == ':' )
+                return i - 2;
+        }
+        return 0;
+    }
+
+    template <int MaxSize>
+    constexpr stripped<MaxSize> strip_keywords_and_space_before_template_closing_bracket(char const * src, int size) noexcept
+    {
+        stripped<MaxSize> result{};
+        char const * end = src + size;
+        int len = 0;
+        std::uint64_t h = hash_start;
+        while( src != end )
+        {
+            if( end - src >= 7 && src[0] == 's' && src[1] == 't' && src[2] == 'r' && src[3] == 'u' && src[4] == 'c' && src[5] == 't' && src[6] == ' ' )
+                src += 7;
+            else if( end - src >= 6 && src[0] == 'c' && src[1] == 'l' && src[2] == 'a' && src[3] == 's' && src[4] == 's' && src[5] == ' ' )
+                src += 6;
+            else if( end - src >= 5 && src[0] == 'e' && src[1] == 'n' && src[2] == 'u' && src[3] == 'm' && src[4] == ' ' )
+                src += 5;
+            else if( src[0] == ' ' && src != end - 1 && src[1] == '>' )
                 ++src;
             else
             {
@@ -312,8 +356,8 @@ namespace d
         static_assert(!has_unnamed_ns(pf + b, size), "unnamed namespaces are not allowed");
         return { pf + b, size };
     }
-}
+} // namespace d
 
-}
+} // namespace boost::reflecto
 
 #endif // #ifndef BOOST_REFLECTO_DETAIL_PRETTY_FUNCTION_TRAITS_HPP_INCLUDED

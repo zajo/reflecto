@@ -37,27 +37,27 @@ struct enum_lookup_range<range_test_enum>
 
 int main()
 {
-    CHECK_VALUE_NAME(test_ns::enum1::value0, "test_ns::enum1::value0");
-    CHECK_VALUE_NAME(test_ns::enum1::value1, "test_ns::enum1::value1");
-    CHECK_VALUE_NAME(test_ns::enum1::value2, "test_ns::enum1::value2");
+    CHECK_NAME(value_name<test_ns::enum1::value0>(), "test_ns::enum1::value0");
+    CHECK_NAME(value_name<test_ns::enum1::value1>(), "test_ns::enum1::value1");
+    CHECK_NAME(value_name<test_ns::enum1::value2>(), "test_ns::enum1::value2");
 
-    CHECK_VALUE_NAME(test_ns::enum2::x, "test_ns::enum2::x");
-    CHECK_VALUE_NAME(test_ns::enum2::y, "test_ns::enum2::y");
+    CHECK_NAME(value_name<test_ns::enum2::x>(), "test_ns::enum2::x");
+    CHECK_NAME(value_name<test_ns::enum2::y>(), "test_ns::enum2::y");
 
-    CHECK_VALUE_NAME(test_ns::enum3_value0, "test_ns::enum3_value0");
-    CHECK_VALUE_NAME(test_ns::enum3_value1, "test_ns::enum3_value1");
-    CHECK_VALUE_NAME(test_ns::enum3_value2, "test_ns::enum3_value2");
+    CHECK_NAME(value_name<test_ns::enum3_value0>(), "test_ns::enum3_value0");
+    CHECK_NAME(value_name<test_ns::enum3_value1>(), "test_ns::enum3_value1");
+    CHECK_NAME(value_name<test_ns::enum3_value2>(), "test_ns::enum3_value2");
 
-    CHECK_VALUE_NAME(test_ns::enum4_x, "test_ns::enum4_x");
-    CHECK_VALUE_NAME(test_ns::enum4_y, "test_ns::enum4_y");
+    CHECK_NAME(value_name<test_ns::enum4_x>(), "test_ns::enum4_x");
+    CHECK_NAME(value_name<test_ns::enum4_y>(), "test_ns::enum4_y");
 
-    CHECK_VALUE_NAME(global_enum1::a, "global_enum1::a");
-    CHECK_VALUE_NAME(global_enum1::b, "global_enum1::b");
-    CHECK_VALUE_NAME(global_enum1::c, "global_enum1::c");
+    CHECK_NAME(value_name<global_enum1::a>(), "global_enum1::a");
+    CHECK_NAME(value_name<global_enum1::b>(), "global_enum1::b");
+    CHECK_NAME(value_name<global_enum1::c>(), "global_enum1::c");
 
-    CHECK_VALUE_NAME(global_enum2_a, "global_enum2_a");
-    CHECK_VALUE_NAME(global_enum2_b, "global_enum2_b");
-    CHECK_VALUE_NAME(global_enum2_c, "global_enum2_c");
+    CHECK_NAME(value_name<global_enum2_a>(), "global_enum2_a");
+    CHECK_NAME(value_name<global_enum2_b>(), "global_enum2_b");
+    CHECK_NAME(value_name<global_enum2_c>(), "global_enum2_c");
 
     ////////////////////////////////////////
 
@@ -85,27 +85,27 @@ int main()
 
     ////////////////////////////////////////
 
-    CHECK_SHORT_VALUE_NAME(test_ns::enum1::value0, "value0");
-    CHECK_SHORT_VALUE_NAME(test_ns::enum1::value1, "value1");
-    CHECK_SHORT_VALUE_NAME(test_ns::enum1::value2, "value2");
+    CHECK_NAME(short_value_name<test_ns::enum1::value0>(), "value0");
+    CHECK_NAME(short_value_name<test_ns::enum1::value1>(), "value1");
+    CHECK_NAME(short_value_name<test_ns::enum1::value2>(), "value2");
 
-    CHECK_SHORT_VALUE_NAME(test_ns::enum2::x, "x");
-    CHECK_SHORT_VALUE_NAME(test_ns::enum2::y, "y");
+    CHECK_NAME(short_value_name<test_ns::enum2::x>(), "x");
+    CHECK_NAME(short_value_name<test_ns::enum2::y>(), "y");
 
-    CHECK_SHORT_VALUE_NAME(test_ns::enum3_value0, "enum3_value0");
-    CHECK_SHORT_VALUE_NAME(test_ns::enum3_value1, "enum3_value1");
-    CHECK_SHORT_VALUE_NAME(test_ns::enum3_value2, "enum3_value2");
+    CHECK_NAME(short_value_name<test_ns::enum3_value0>(), "enum3_value0");
+    CHECK_NAME(short_value_name<test_ns::enum3_value1>(), "enum3_value1");
+    CHECK_NAME(short_value_name<test_ns::enum3_value2>(), "enum3_value2");
 
-    CHECK_SHORT_VALUE_NAME(test_ns::enum4_x, "enum4_x");
-    CHECK_SHORT_VALUE_NAME(test_ns::enum4_y, "enum4_y");
+    CHECK_NAME(short_value_name<test_ns::enum4_x>(), "enum4_x");
+    CHECK_NAME(short_value_name<test_ns::enum4_y>(), "enum4_y");
 
-    CHECK_SHORT_VALUE_NAME(global_enum1::a, "a");
-    CHECK_SHORT_VALUE_NAME(global_enum1::b, "b");
-    CHECK_SHORT_VALUE_NAME(global_enum1::c, "c");
+    CHECK_NAME(short_value_name<global_enum1::a>(), "a");
+    CHECK_NAME(short_value_name<global_enum1::b>(), "b");
+    CHECK_NAME(short_value_name<global_enum1::c>(), "c");
 
-    CHECK_SHORT_VALUE_NAME(global_enum2_a, "global_enum2_a");
-    CHECK_SHORT_VALUE_NAME(global_enum2_b, "global_enum2_b");
-    CHECK_SHORT_VALUE_NAME(global_enum2_c, "global_enum2_c");
+    CHECK_NAME(short_value_name<global_enum2_a>(), "global_enum2_a");
+    CHECK_NAME(short_value_name<global_enum2_b>(), "global_enum2_b");
+    CHECK_NAME(short_value_name<global_enum2_c>(), "global_enum2_c");
 
     ////////////////////////////////////////
 

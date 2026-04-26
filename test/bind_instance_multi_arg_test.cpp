@@ -6,7 +6,7 @@
 #ifdef BOOST_REFLECTO_TEST_SINGLE_HEADER
 #   include "reflecto.hpp"
 #else
-#   include <boost/reflecto/ns_bind.hpp>
+#   include <boost/reflecto/bind_instance.hpp>
 #endif
 
 #include "test_helpers.hpp"
@@ -56,7 +56,7 @@ struct setting: unspecialized
 };
 
 template <class T, class U>
-struct setting<in_namespace<ns_a::this_namespace>, T, U>
+struct setting<within_scope_of<ns_a::this_namespace>, T, U>
 {
     static constexpr int value = 10;
 };
@@ -70,21 +70,21 @@ struct setting<ns_a::ns_b::b_type1, T, U>
 
 int main()
 {
-    CHECK((ns_bind<setting<resolve_for<global_type>, int, float>>::value == 0));
-    CHECK((std::is_base_of_v<unspecialized, ns_bind<setting<resolve_for<global_type>, int, float>>>));
+    CHECK((bind_instance<setting<resolve_for<global_type>, int, float>>::value == 0));
+    CHECK((std::is_base_of_v<unspecialized, bind_instance<setting<resolve_for<global_type>, int, float>>>));
 
-    CHECK((ns_bind<setting<resolve_for<ns_a::a_type>, int, float>>::value == 10));
-    CHECK((!std::is_base_of_v<unspecialized, ns_bind<setting<resolve_for<ns_a::a_type>, int, float>>>));
+    CHECK((bind_instance<setting<resolve_for<ns_a::a_type>, int, float>>::value == 10));
+    CHECK((!std::is_base_of_v<unspecialized, bind_instance<setting<resolve_for<ns_a::a_type>, int, float>>>));
 
-    CHECK((ns_bind<setting<resolve_for<ns_a::ns_b::b_type1>, int, float>>::value == 20));
-    CHECK((!std::is_base_of_v<unspecialized, ns_bind<setting<resolve_for<ns_a::ns_b::b_type1>, int, float>>>));
+    CHECK((bind_instance<setting<resolve_for<ns_a::ns_b::b_type1>, int, float>>::value == 20));
+    CHECK((!std::is_base_of_v<unspecialized, bind_instance<setting<resolve_for<ns_a::ns_b::b_type1>, int, float>>>));
 
-    CHECK((ns_bind<setting<resolve_for<ns_a::ns_b::b_type2>, int, float>>::value == 10));
+    CHECK((bind_instance<setting<resolve_for<ns_a::ns_b::b_type2>, int, float>>::value == 10));
 
-    CHECK((ns_bind<setting<resolve_for<ns_a::ns_b::ns_c::c_type>, int, float>>::value == 10));
+    CHECK((bind_instance<setting<resolve_for<ns_a::ns_b::ns_c::c_type>, int, float>>::value == 10));
 
-    CHECK((ns_bind<setting<resolve_for<ns_other::other_type>, int, float>>::value == 0));
-    CHECK((std::is_base_of_v<unspecialized, ns_bind<setting<resolve_for<ns_other::other_type>, int, float>>>));
+    CHECK((bind_instance<setting<resolve_for<ns_other::other_type>, int, float>>::value == 0));
+    CHECK((std::is_base_of_v<unspecialized, bind_instance<setting<resolve_for<ns_other::other_type>, int, float>>>));
 
     return errcount;
 }

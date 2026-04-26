@@ -8,7 +8,6 @@
 
 #ifndef BOOST_REFLECTO_TEST_SINGLE_HEADER
 #   include <boost/reflecto/name.hpp>
-#   include <boost/reflecto/detail/pretty_function_traits.hpp>
 #endif
 #include <iostream>
 #include <cstdint>
@@ -75,54 +74,12 @@ bool check_str_rt(char const * a, char const * b, char const * file, int line)
 #define CHECK_CONSTEXPR(expr) static_assert(expr)
 #define CHECK_RT(expr) check_rt((expr), #expr, __FILE__, __LINE__)
 
-#define CHECK_TYPE_NAME_CONSTEXPR(entity, expected) static_assert(check_name(boost::reflecto::type_name<entity>(), expected))
-#define CHECK_VALUE_NAME_CONSTEXPR(entity, expected) static_assert(check_name(boost::reflecto::value_name<entity>(), expected))
-#define CHECK_SHORT_VALUE_NAME_CONSTEXPR(entity, expected) static_assert(check_name(boost::reflecto::short_value_name<entity>(), expected))
-
 #ifdef RUNTIME_TEST
-
-namespace boost::reflecto::d
-{
-    template <class T>
-    constexpr t BOOST_REFLECTO_CDECL a()
-    {
-        std::cerr << "  a: " << BOOST_REFLECTO_PRETTY_FUNCTION << '\n';
-        return {};
-    }
-
-    template <class Enum, Enum Value>
-    constexpr t BOOST_REFLECTO_CDECL b()
-    {
-        std::cerr << "  b: " << BOOST_REFLECTO_PRETTY_FUNCTION << '\n';
-        return {};
-    }
-}
-
-#define CHECK_TYPE_NAME_RT(entity, expected) \
-    do { \
-        if( !check_name_rt(boost::reflecto::type_name<entity>(), expected, __FILE__, __LINE__) ) \
-            (void) boost::reflecto::d::a<entity>(); \
-    } while(0)
-
-#define CHECK_VALUE_NAME_RT(entity, expected) \
-    do { \
-        if( !check_name_rt(boost::reflecto::value_name<entity>(), expected, __FILE__, __LINE__) ) \
-            (void) boost::reflecto::d::b<decltype(entity), entity>(); \
-    } while(0)
-
-#define CHECK_SHORT_VALUE_NAME_RT(entity, expected) \
-    do { \
-        if( !check_name_rt(boost::reflecto::short_value_name<entity>(), expected, __FILE__, __LINE__) ) \
-            (void) boost::reflecto::d::b<decltype(entity), entity>(); \
-    } while(0)
 
 #   define TEST_CONSTEXPR
 #   define CHECK_NAME CHECK_NAME_RT
 #   define CHECK_STR CHECK_STR_RT
 #   define CHECK CHECK_RT
-#   define CHECK_TYPE_NAME CHECK_TYPE_NAME_RT
-#   define CHECK_VALUE_NAME CHECK_VALUE_NAME_RT
-#   define CHECK_SHORT_VALUE_NAME CHECK_SHORT_VALUE_NAME_RT
 
 #else
 
@@ -130,9 +87,6 @@ namespace boost::reflecto::d
 #   define CHECK_NAME CHECK_NAME_CONSTEXPR
 #   define CHECK_STR CHECK_STR_CONSTEXPR
 #   define CHECK CHECK_CONSTEXPR
-#   define CHECK_TYPE_NAME CHECK_TYPE_NAME_CONSTEXPR
-#   define CHECK_VALUE_NAME CHECK_VALUE_NAME_CONSTEXPR
-#   define CHECK_SHORT_VALUE_NAME CHECK_SHORT_VALUE_NAME_CONSTEXPR
 
 #endif
 
