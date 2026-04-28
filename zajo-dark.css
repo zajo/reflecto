@@ -484,3 +484,9 @@ body.toc2.toc-right #toc.toc2{border-left:0}
 #toc.toc2::-webkit-scrollbar-thumb{background:#606060;border-radius:5px}
 #toc.toc2::-webkit-scrollbar-thumb:hover{background:#808080}
 #toc.toc2::-webkit-scrollbar-corner{background:#404040}
+.listingblock pre{scrollbar-color:#606060 #101010;scrollbar-width:thin}
+.listingblock pre::-webkit-scrollbar{width:10px;height:10px}
+.listingblock pre::-webkit-scrollbar-track{background:#101010}
+.listingblock pre::-webkit-scrollbar-thumb{background:#606060;border-radius:5px}
+.listingblock pre::-webkit-scrollbar-thumb:hover{background:#808080}
+.listingblock pre::-webkit-scrollbar-corner{background:#101010}
