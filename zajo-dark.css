@@ -458,7 +458,7 @@ h3 code{color:#b79de5; font-size:104%}
 h4 code{color:#b79de5; font-size:104%}
 h5 code{color:#b79de5; font-size:104%}
 #header>h1:first-child{font-family:"Manrope","DejaVu Sans",sans-serif;font-weight:800;color:#b79de5;margin-top:2.25rem;margin-bottom:0;letter-spacing:-.04em}
-#author{color:#e5ce68}
+#author{color:#e5ce68;font-weight:700}
 #toc ul{font-family:"Quicksand","DejaVu Sans",sans-serif;list-style-type:none}
 #toc a:hover{color:#b79de5}
 #toc.toc2{background-color:#404040}
@@ -490,3 +490,5 @@ body.toc2.toc-right #toc.toc2{border-left:0}
 .listingblock pre::-webkit-scrollbar-thumb{background:#606060;border-radius:5px}
 .listingblock pre::-webkit-scrollbar-thumb:hover{background:#808080}
 .listingblock pre::-webkit-scrollbar-corner{background:#101010}
+hr{border-color:#606060}
+.sect1+.sect1{border-top-color:#606060}
